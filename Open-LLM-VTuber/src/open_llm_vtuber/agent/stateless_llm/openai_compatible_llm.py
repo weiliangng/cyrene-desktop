@@ -30,6 +30,7 @@ class AsyncLLM(StatelessLLMInterface):
         organization_id: str = "z",
         project_id: str = "z",
         temperature: float = 1.0,
+        request_user: str | None = None,
     ):
         """
         Initializes an instance of the `AsyncLLM` class.
@@ -42,6 +43,7 @@ class AsyncLLM(StatelessLLMInterface):
         - llm_api_key (str, optional): The API key for the OpenAI API. Defaults to "z".
         - temperature (float, optional): What sampling temperature to use, between 0 and 2. Defaults to 1.0.
         """
+        self.request_user = request_user
         self.base_url = base_url
         self.model = model
         self.temperature = temperature
@@ -105,12 +107,15 @@ class AsyncLLM(StatelessLLMInterface):
                 stream=True,
                 temperature=self.temperature,
                 tools=available_tools,
+                user=self.request_user or NOT_GIVEN,
             )
             logger.debug(
                 f"Tool Support: {self.support_tools}, Available tools: {available_tools}"
             )
 
             async for chunk in stream:
+                if not chunk.choices:
+                    continue
                 if self.support_tools:
                     has_tool_calls = (
                         hasattr(chunk.choices[0].delta, "tool_calls")

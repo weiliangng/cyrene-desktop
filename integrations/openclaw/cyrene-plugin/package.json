@@ -1,0 +1,14 @@
+{
+  "name": "@cyrene/openclaw-desktop",
+  "version": "0.1.0",
+  "type": "module",
+  "openclaw": {
+    "extensions": [
+      "./index.mjs"
+    ],
+    "compat": {
+      "pluginApi": ">=2026.11.1",
+      "minGatewayVersion": "2026.11.1"
+    }
+  }
+}

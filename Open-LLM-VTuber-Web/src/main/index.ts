@@ -23,6 +23,17 @@ protocol.registerSchemesAsPrivileged([{
 
 let lastLayoutJson = '';
 function setupIPC(): void {
+  ipcMain.handle('cyrene-visibility', (event, visible) => {
+    const window = windowManager.getWindow();
+    if (!window || event.sender !== window.webContents || typeof visible !== 'boolean') throw new Error('Invalid visibility request');
+    if (visible) window.showInactive(); else window.hide();
+    return window.isVisible();
+  });
+  ipcMain.on('cyrene-control-token', (event) => {
+    if (event.sender !== windowManager.getWindow()?.webContents) { event.returnValue = null; return; }
+    try { event.returnValue = readFileSync(join(localRoot, 'tmp', 'cyrene-control', 'token'), 'utf8').trim(); }
+    catch { event.returnValue = null; }
+  });
   const layoutFile = join(stateDir, 'pet-layout.json');
   ipcMain.on('cyrene-read-layout', (event) => {
     try { event.returnValue = JSON.parse(readFileSync(layoutFile, 'utf8')); }

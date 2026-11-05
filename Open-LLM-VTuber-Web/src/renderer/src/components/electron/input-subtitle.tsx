@@ -18,6 +18,8 @@ import { inputSubtitleStyles } from './electron-style';
 import { useMode } from '@/context/mode-context';
 import { usePetActivity } from '@/pet/use-pet-activity';
 import { heldKeys } from '@/pet/cyrene-runtime';
+import { useExternalControl } from '@/pet/external-control';
+import { emitControlEvent } from '@/pet/use-cyrene-control';
 
 export function InputSubtitle() {
   const {
@@ -38,6 +40,7 @@ export function InputSubtitle() {
   const { mode } = useMode();
   const isPet = mode === 'pet';
   const { sleeping, setActivity } = usePetActivity();
+  const { caption, taskLabel } = useExternalControl();
   const expanded = !isPet || !sleeping;
 
   const {
@@ -136,14 +139,14 @@ export function InputSubtitle() {
           <LuX size={12} />
         </IconButton>
 
-        {hasAIMessages && (
+        {(hasAIMessages || caption) && (
           <VStack
             minH={lastAIMessage ? '32px' : '0px'}
             {...inputSubtitleStyles.messageStack}
           >
-            {lastAIMessage && (
+            {(caption || lastAIMessage) && (
               <Text {...inputSubtitleStyles.messageText}>
-                {lastAIMessage}
+                {caption || lastAIMessage}
               </Text>
             )}
           </VStack>
@@ -154,7 +157,7 @@ export function InputSubtitle() {
             <Flex align="center" gap="2">
               <LuBell size={16} />
               <Text {...inputSubtitleStyles.statusText}>
-                {aiState === 'idle' ? 'Cyrene' : aiState}
+                {taskLabel || (aiState === 'idle' ? 'Cyrene' : aiState)}
               </Text>
             </Flex>
 
@@ -197,8 +200,8 @@ export function InputSubtitle() {
               onChange={handleInputChange}
               onKeyDown={(event) => { heldKeys.add(event.key.toLowerCase()); handleKeyPress(event); }}
               onKeyUp={(event) => heldKeys.delete(event.key.toLowerCase())}
-              onFocus={() => setActivity('focus', true)}
-              onBlur={() => { heldKeys.clear(); setActivity('focus', false); }}
+              onFocus={() => { setActivity('focus', true); emitControlEvent('input.focused'); }}
+              onBlur={() => { heldKeys.clear(); setActivity('focus', false); emitControlEvent('input.blurred'); }}
               onCompositionStart={handleCompositionStart}
               onCompositionEnd={handleCompositionEnd}
               placeholder="Say something to Cyrene..."

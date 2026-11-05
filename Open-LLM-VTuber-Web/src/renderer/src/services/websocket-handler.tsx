@@ -21,6 +21,7 @@ import { useLocalStorage } from '@/hooks/utils/use-local-storage';
 import { useGroup } from '@/context/group-context';
 import { useInterrupt } from '@/hooks/utils/use-interrupt';
 import { useBrowser } from '@/context/browser-context';
+import { useCyreneControl, cancelExternalSpeech } from '@/pet/use-cyrene-control';
 
 function WebSocketHandler({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation();
@@ -31,7 +32,10 @@ function WebSocketHandler({ children }: { children: React.ReactNode }) {
   const { setModelInfo } = useLive2DConfig();
   const { setSubtitleText } = useSubtitle();
   const { clearResponse, setForceNewMessage, appendHumanMessage, appendOrUpdateToolCallMessage } = useChatHistory();
-  const { addAudioTask } = useAudioTask();
+  const { addAudioTask, stopCurrentAudioAndLipSync } = useAudioTask();
+  const cyreneControl = useCyreneControl(addAudioTask, stopCurrentAudioAndLipSync);
+  const cyreneRef = useRef(cyreneControl);
+  cyreneRef.current = cyreneControl;
   const bgUrlContext = useBgUrl();
   const { confUid, setConfName, setConfUid, setConfigFiles } = useConfig();
   const [pendingModelInfo, setPendingModelInfo] = useState<ModelInfo | undefined>(undefined);
@@ -67,6 +71,8 @@ function WebSocketHandler({ children }: { children: React.ReactNode }) {
         stopMic();
         break;
       case 'conversation-chain-start':
+        stopCurrentAudioAndLipSync();
+        cancelExternalSpeech();
         setAiState('thinking-speaking');
         audioTaskQueue.clearQueue();
         clearResponse();
@@ -94,6 +100,8 @@ function WebSocketHandler({ children }: { children: React.ReactNode }) {
   const handleWebSocketMessage = useCallback((message: MessageEvent) => {
     console.log('Received message from server:', message);
     switch (message.type) {
+      case 'cyrene-command': void cyreneRef.current.handle(message); break;
+      case 'cyrene-state': cyreneRef.current.snapshot(message.state); break;
       case 'control':
         if (message.text) {
           handleControlMessage(message.text);
@@ -110,6 +118,8 @@ function WebSocketHandler({ children }: { children: React.ReactNode }) {
         }
         if (message.client_uid) {
           setSelfUid(message.client_uid);
+          const controlToken = (window.api as any)?.getControlToken?.();
+          if (controlToken) wsService.sendMessage({ type: 'cyrene-register', kind: 'desktop', token: controlToken });
         }
         setPendingModelInfo(message.model_info);
         // setModelInfo(message.model_info);
@@ -296,7 +306,10 @@ function WebSocketHandler({ children }: { children: React.ReactNode }) {
   }, [wsUrl]);
 
   useEffect(() => {
-    const stateSubscription = wsService.onStateChange(setWsState);
+    const stateSubscription = wsService.onStateChange((state) => {
+      setWsState(state);
+      if (state === 'CLOSED') cyreneRef.current.reset();
+    });
     const messageSubscription = wsService.onMessage(handleWebSocketMessage);
     return () => {
       stateSubscription.unsubscribe();

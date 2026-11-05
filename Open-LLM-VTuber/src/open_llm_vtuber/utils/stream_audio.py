@@ -1,4 +1,8 @@
 import base64
+import io
+import os
+from pathlib import Path
+import subprocess
 from pydub import AudioSegment
 from pydub.utils import make_chunks
 from ..agent.output_types import Actions
@@ -60,7 +64,20 @@ def prepare_audio_payload(
         }
 
     try:
-        audio = AudioSegment.from_file(audio_path)
+        if Path(audio_path).suffix.lower() == '.wav':
+            audio = AudioSegment.from_file(audio_path, format='wav')
+        else:
+            # The Windows bundle includes FFmpeg, not ffprobe. Decode directly
+            # instead of pydub's probe-before-decode path for MP3 and other codecs.
+            converted = subprocess.run(
+                [AudioSegment.converter, '-v', 'error', '-nostdin', '-i', str(audio_path),
+                 '-c:a', 'pcm_s16le', '-f', 'wav', 'pipe:1'],
+                capture_output=True, timeout=45,
+                creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0,
+            )
+            if converted.returncode:
+                raise ValueError(converted.stderr.decode('utf-8', errors='replace')[-1000:])
+            audio = AudioSegment.from_file(io.BytesIO(converted.stdout), format='wav')
         audio_bytes = audio.export(format="wav").read()
     except Exception as e:
         raise ValueError(

@@ -49,6 +49,9 @@ export interface Actions {
 }
 
 export interface MessageEvent {
+  command_id?: string;
+  data?: Record<string, any>;
+  state?: any;
   tool_id: any;
   tool_name: any;
   name: any;
@@ -109,6 +112,18 @@ class WebSocketService {
   private static instance: WebSocketService;
 
   private ws: WebSocket | null = null;
+  private desiredUrl: string | null = null;
+  private reconnectTimer?: number;
+  private reconnectAttempt = 0;
+
+  private scheduleReconnect(url: string) {
+    if (this.desiredUrl !== url || this.reconnectTimer !== undefined) return;
+    const delay = Math.min(1000 * 2 ** Math.min(this.reconnectAttempt++, 4), 10000);
+    this.reconnectTimer = window.setTimeout(() => {
+      this.reconnectTimer = undefined;
+      if (this.desiredUrl === url) this.connect(url);
+    }, delay);
+  }
 
   private messageSubject = new Subject<MessageEvent>();
 
@@ -139,23 +154,27 @@ class WebSocketService {
   }
 
   connect(url: string) {
-    if (this.ws?.readyState === WebSocket.CONNECTING ||
-        this.ws?.readyState === WebSocket.OPEN) {
-      this.disconnect();
-    }
+    this.disconnect();
+    this.desiredUrl = url;
 
     try {
-      this.ws = new WebSocket(url);
+      const socket = new WebSocket(url);
+      this.ws = socket;
       this.currentState = 'CONNECTING';
       this.stateSubject.next('CONNECTING');
 
-      this.ws.onopen = () => {
+      socket.onopen = () => {
+        if (this.ws !== socket) return;
+        this.reconnectAttempt = 0;
+        window.clearTimeout(this.reconnectTimer);
+        this.reconnectTimer = undefined;
         this.currentState = 'OPEN';
         this.stateSubject.next('OPEN');
         this.initializeConnection();
       };
 
-      this.ws.onmessage = (event) => {
+      socket.onmessage = (event) => {
+        if (this.ws !== socket) return;
         try {
           const message = JSON.parse(event.data);
           this.messageSubject.next(message);
@@ -169,16 +188,21 @@ class WebSocketService {
         }
       };
 
-      this.ws.onclose = () => {
+      socket.onclose = () => {
+        if (this.ws !== socket) return;
         this.currentState = 'CLOSED';
         this.stateSubject.next('CLOSED');
+        this.scheduleReconnect(url);
       };
 
-      this.ws.onerror = () => {
+      socket.onerror = () => {
+        if (this.ws !== socket) return;
         this.currentState = 'CLOSED';
         this.stateSubject.next('CLOSED');
+        this.scheduleReconnect(url);
       };
     } catch (error) {
+      this.scheduleReconnect(url);
       console.error('Failed to connect to WebSocket:', error);
       this.currentState = 'CLOSED';
       this.stateSubject.next('CLOSED');
@@ -189,7 +213,7 @@ class WebSocketService {
     if (this.ws?.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify(message));
     } else {
-      console.warn('WebSocket is not open. Unable to send message:', message);
+      console.warn('WebSocket is not open. Unable to send message type:', (message as { type?: string }).type);
       toaster.create({
         title: getTranslation()('error.websocketNotOpen'),
         type: 'error',
@@ -207,8 +231,17 @@ class WebSocketService {
   }
 
   disconnect() {
-    this.ws?.close();
+    this.desiredUrl = null;
+    window.clearTimeout(this.reconnectTimer);
+    this.reconnectTimer = undefined;
+    if (this.ws) {
+      this.ws.onclose = null; this.ws.onopen = null;
+      this.ws.onmessage = null; this.ws.onerror = null;
+      this.ws.close();
+    }
     this.ws = null;
+    this.currentState = 'CLOSED';
+    this.stateSubject.next('CLOSED');
   }
 
   getCurrentState() {

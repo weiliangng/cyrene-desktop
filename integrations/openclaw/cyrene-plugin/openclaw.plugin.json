@@ -1,0 +1,36 @@
+{
+  "id": "cyrene",
+  "name": "Cyrene Desktop",
+  "description": "Connect the Cyrene desktop pet and agent task lifecycle.",
+  "categories": [
+    "integrations"
+  ],
+  "activation": {
+    "onStartup": true
+  },
+  "contracts": {
+    "tools": [
+      "cyrene_state",
+      "cyrene_control",
+      "cyrene_events"
+    ]
+  },
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "tokenFile"
+    ],
+    "properties": {
+      "baseUrl": {
+        "type": "string"
+      },
+      "tokenFile": {
+        "type": "string"
+      },
+      "agentId": {
+        "type": "string"
+      }
+    }
+  }
+}

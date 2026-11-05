@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useAiState } from '@/context/ai-state-context';
 import { ModelInfo } from '@/context/live2d-config-context';
 import { usePetActivity } from './use-pet-activity';
+import { externalState } from './external-control';
 
 export function useCyreneIdle(modelInfo?: ModelInfo) {
   const { aiState } = useAiState();
@@ -23,7 +24,8 @@ export function useCyreneIdle(modelInfo?: ModelInfo) {
       const adapter = (window as any).getLAppAdapter?.();
       const model = adapter?.getModel();
       if (!model?._model || adapter.getExpressionCount() < 1) return;
-      const expression = sleeping ? 'sleep' : 'neutral';
+      externalState.tick(Date.now());
+      const expression = externalState.expression?.name || (sleeping ? 'sleep' : 'neutral');
       // Do not overwrite speech-driven emotions on every frame.
       if (previous.current?.model !== model || previous.current?.expression !== expression) {
         adapter.setExpression(expression);

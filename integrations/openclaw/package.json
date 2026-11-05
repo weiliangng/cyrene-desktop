@@ -1,0 +1,9 @@
+{
+  "name": "cyrene-openclaw-integration",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@openclaw/fs-safe-win32-x64-msvc": "0.26.5",
+    "openclaw": "2026.11.1"
+  }
+}

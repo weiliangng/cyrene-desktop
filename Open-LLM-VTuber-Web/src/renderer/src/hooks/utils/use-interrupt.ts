@@ -1,3 +1,4 @@
+import { cancelExternalSpeech } from '@/pet/use-cyrene-control';
 import { useAiState } from '@/context/ai-state-context';
 import { useWebSocket } from '@/context/websocket-context';
 import { useChatHistory } from '@/context/chat-history-context';
@@ -18,6 +19,7 @@ export const useInterrupt = () => {
     console.log('Interrupting conversation chain');
 
     stopCurrentAudioAndLipSync();
+    cancelExternalSpeech();
 
     audioTaskQueue.clearQueue();
 

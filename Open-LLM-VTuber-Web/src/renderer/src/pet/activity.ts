@@ -1,6 +1,6 @@
 // Small state machine shared by the UI and deterministic idle-behaviour tests.
 export const SLEEP_DELAY_MS = 5000;
-export type ActivitySource = 'model' | 'panel' | 'focus' | 'draft' | 'conversation';
+export type ActivitySource = 'model' | 'panel' | 'focus' | 'draft' | 'conversation' | 'external' | 'speech';
 
 export class PetActivity {
   sleeping = true;
@@ -18,6 +18,8 @@ export class PetActivity {
       this.lastActivity = now;
     }
   }
+
+  sleep(): void { this.active.clear(); this.lastActivity = -Infinity; this.sleeping = true; }
 
   tick(now: number): boolean {
     this.sleeping = this.active.size === 0 && now - this.lastActivity >= this.delay;

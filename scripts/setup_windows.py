@@ -20,6 +20,7 @@ def run(args, cwd=ROOT):
 def main():
     parser=argparse.ArgumentParser()
     parser.add_argument('--skip-desktop-build',action='store_true')
+    parser.add_argument('--with-openclaw',action='store_true')
     parser.add_argument('--uv-cache',type=Path,default=ROOT/'tmp/uv-cache')
     parser.add_argument('--npm-cache',type=Path,default=ROOT/'tmp/npm-cache')
     args=parser.parse_args()
@@ -52,6 +53,9 @@ def main():
             source.extractall(BACKEND/'models',filter='data')
     if hashlib.sha256(model.read_bytes()).hexdigest()!=manifest['asr']['sha256']:
         raise SystemExit('Speech model hash mismatch; check the local model before launching.')
+    if args.with_openclaw:
+        run([npm,'ci','--omit=optional','--cache',args.npm_cache,'--maxsockets=2','--no-audit','--no-fund'],ROOT/'integrations/openclaw')
+        run([python,ROOT/'scripts/setup_openclaw.py','configure','--connect'])
     if not args.skip_desktop_build:
         run([npm,'ci','--cache',args.npm_cache,'--no-audit','--no-fund'],DESKTOP)
         run([npm,'run','build'],DESKTOP)

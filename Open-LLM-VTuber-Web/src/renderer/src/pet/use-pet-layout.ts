@@ -11,6 +11,7 @@ export function usePetLayout(modelInfo?: ModelInfo) {
     restoredModel.current = undefined;
     if (mode !== 'pet' || modelInfo?.name !== 'cyrene') return undefined;
 
+    let lastLayout = '';
     const sync = () => {
       const model = (window as any).getLAppAdapter?.()?.getModel();
       if (!model?._modelMatrix || !model?._modelSetting
@@ -28,7 +29,14 @@ export function usePetLayout(modelInfo?: ModelInfo) {
         }));
       }
       const layout = savePetLayout(window.localStorage, model._modelMatrix.getArray());
-      if (layout) (window.api as any)?.savePetLayout?.(layout);
+      if (layout) {
+        (window.api as any)?.savePetLayout?.(layout);
+        const json = JSON.stringify(layout);
+        if (lastLayout !== json) {
+          lastLayout = json;
+          window.dispatchEvent(new CustomEvent('cyrene-layout-saved', { detail: layout }));
+        }
+      }
     };
     sync();
     const timer = window.setInterval(sync, 250);

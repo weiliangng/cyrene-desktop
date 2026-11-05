@@ -8,7 +8,7 @@ Double-click **Start Cyrene Desktop.cmd**. Cyrene starts in transparent pet mode
 
 Right-click Cyrene or the tray icon to change modes, toggle input visibility or mouse passthrough, and exit. The original watermark-hiding preset and the heart-layer corrections remain applied. The original model ZIP is unchanged.
 
-The LLM endpoint is a preview placeholder. OpenClaw and an external control/MCP bridge have not been connected. The backend already supports its own MCP tool clients, but MCP is disabled in the preview configuration.
+OpenClaw is available as a pinned, project-local runtime with a Cyrene plugin. **Start Cyrene with OpenClaw.cmd** configures chat through OpenClaw and SoCLaaS (`SOCLAAS_API_KEY` in the launch environment). A token-protected local control API and MCP adapter expose event input/output, expressions, speech/subtitles, task lifecycles, wake/sleep, visibility, layout and interruption. See [external connections and examples](docs/CONTROL-API.md). The committed preview configuration remains a credential-free starting point.
 
 ## First setup after cloning
 
@@ -23,6 +23,8 @@ npm run build
 npm run package
 ```
 
+To include OpenClaw on a fresh setup, run `uv run --no-project --python 3.12 scripts/setup_windows.py --with-openclaw`. See the integration guide for the environment key and profile configuration.
+
 Private credentials belong only in the ignored `Open-LLM-VTuber/conf.yaml` and `mcp_servers.json`. Setup initializes these from the committed preview examples and never overwrites an existing local configuration.
 
 ## Layout
@@ -32,7 +34,8 @@ Private credentials belong only in the ignored `Open-LLM-VTuber/conf.yaml` and `
 | `Open-LLM-VTuber-Web/` | React/Electron desktop source and custom pet behavior |
 | `Open-LLM-VTuber/` | Python backend, prompts, configuration template and browser preview |
 | `Open-LLM-VTuber/live2d-models/cyrene/` | Single source copy of the adapted model, textures and 33 expression presets |
-| `scripts/` | Windows setup, original model importer and Cubism regression check |
+| `scripts/` | Windows setup, control CLI, OpenClaw profile launcher and Cubism regression check |
+| `integrations/` | Pinned OpenClaw runtime/plugin, persona templates, MCP adapter and optional event examples |
 | `runtime-downloads.json` | Upstream versions and speech-model download/hash |
 
 The two upstream projects are ordinary directories in this one Git repository: no nested repositories or Git submodules. The desktop build copies Cyrene assets from the backend's model directory into its packaged resources. The Python backend stays a separate local process, launched automatically by the root launcher. Downloaded ASR weights, FFmpeg, dependencies, packaged executables, logs, caches and chat history are ignored rather than uploaded.

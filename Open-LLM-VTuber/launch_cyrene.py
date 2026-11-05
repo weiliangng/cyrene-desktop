@@ -26,6 +26,10 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--no-browser', action='store_true')
     args = parser.parse_args()
+    # Start the project-local gateway only when chat is configured to use it.
+    conf_path = ROOT / 'conf.yaml'
+    if conf_path.exists() and 'http://127.0.0.1:18789/v1' in conf_path.read_text(encoding='utf-8'):
+        subprocess.run([str(ROOT / '.venv/Scripts/python.exe'), str(ROOT.parent / 'scripts/setup_openclaw.py'), 'start'], check=True)
     if not ready():
         logs = ROOT / 'logs'
         logs.mkdir(exist_ok=True)

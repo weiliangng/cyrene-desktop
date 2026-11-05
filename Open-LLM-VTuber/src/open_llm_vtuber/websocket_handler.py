@@ -1,3 +1,4 @@
+from uuid import uuid4
 from typing import Dict, List, Optional, Callable, TypedDict
 from fastapi import WebSocket, WebSocketDisconnect
 import asyncio
@@ -63,6 +64,7 @@ class WebSocketHandler:
 
     def __init__(self, default_context_cache: ServiceContext):
         """Initialize the WebSocket handler with default context"""
+        self.control_hub = None
         self.client_connections: Dict[str, WebSocket] = {}
         self.client_contexts: Dict[str, ServiceContext] = {}
         self.chat_group_manager = ChatGroupManager()
@@ -252,6 +254,24 @@ class WebSocketHandler:
             logger.warning("Message received without type")
             return
 
+        if self.control_hub:
+            if msg_type == 'cyrene-register':
+                await self.control_hub.register(client_uid, data)
+                return
+            if msg_type == 'cyrene-event':
+                await self.control_hub.client_event(client_uid, data)
+                return
+            if msg_type in ('text-input', 'mic-audio-end', 'ai-speak-signal'):
+                self.control_hub.conversations[client_uid] = data.get('cyrene_command_id') or str(uuid4())
+            event_name = {'text-input': 'input.received', 'mic-audio-end': 'input.audio', 'audio-play-start': 'output.text',
+                          'frontend-playback-complete': 'output.completed',
+                          'interrupt-signal': 'conversation.interrupted'}.get(msg_type)
+            if event_name:
+                await self.control_hub.bus.emit(event_name,
+                    {'text': data.get('text'), 'display_text': data.get('display_text')}, client_id=client_uid,
+                    conversation_id=self.control_hub.conversations.get(client_uid))
+                if msg_type in ('frontend-playback-complete', 'interrupt-signal'):
+                    self.control_hub.conversations.pop(client_uid, None)
         handler = self._message_handlers.get(msg_type)
         if handler:
             await handler(websocket, client_uid, data)
@@ -279,6 +299,8 @@ class WebSocketHandler:
 
     async def handle_disconnect(self, client_uid: str) -> None:
         """Handle client disconnection"""
+        if self.control_hub:
+            await self.control_hub.disconnect(client_uid)
         group = self.chat_group_manager.get_client_group(client_uid)
         if group:
             await handle_group_interrupt(

@@ -16,6 +16,8 @@ from starlette.staticfiles import StaticFiles as StarletteStaticFiles
 
 from .routes import init_client_ws_route, init_webtool_routes, init_proxy_route
 from .service_context import ServiceContext
+from .websocket_handler import WebSocketHandler
+from .control_api import ControlHub
 from .config_manager.utils import Config
 
 
@@ -88,10 +90,17 @@ class WebSocketServer:
             allow_headers=["*"],
         )
 
+        self.ws_handler = WebSocketHandler(self.default_context_cache)
+        self.control_hub = ControlHub(self.ws_handler)
+        self.ws_handler.control_hub = self.control_hub
+        self.app.include_router(self.control_hub.router())
+        self.app.add_event_handler("startup", self.control_hub.start)
+        self.app.add_event_handler("shutdown", self.control_hub.close)
+
         # Include routes, passing the context instance
         # The context will be populated during the initialize step
         self.app.include_router(
-            init_client_ws_route(default_context_cache=self.default_context_cache),
+            init_client_ws_route(default_context_cache=self.default_context_cache, ws_handler=self.ws_handler),
         )
         self.app.include_router(
             init_webtool_routes(default_context_cache=self.default_context_cache),

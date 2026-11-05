@@ -16,7 +16,14 @@ import * as LAppDefine from '../../../WebSDK/src/lappdefine';
 // Simple type alias for Live2D model
 type Live2DModel = any;
 
+// Playback is shared across hook instances (including the interrupt button).
+const sharedAudioRef: { current: HTMLAudioElement | null } = { current: null };
+const sharedModelRef: { current: Live2DModel | null } = { current: null };
+let cancelPlayback: (() => void) | undefined;
+
 interface AudioTaskOptions {
+  onLifecycle?: (event: 'started' | 'finished' | 'failed' | 'cancelled') => void;
+  onSettled?: () => void;
   audioBase64: string
   volumes: number[]
   sliceLength: number
@@ -46,8 +53,8 @@ export const useAudioTask = () => {
   });
 
   // Track current audio and model
-  const currentAudioRef = useRef<HTMLAudioElement | null>(null);
-  const currentModelRef = useRef<Live2DModel | null>(null);
+  const currentAudioRef = sharedAudioRef;
+  const currentModelRef = sharedModelRef;
 
   stateRef.current = {
     aiState,
@@ -63,6 +70,7 @@ export const useAudioTask = () => {
     if (currentAudioRef.current) {
       console.log('Stopping current audio and lip sync');
       const audio = currentAudioRef.current;
+      cancelPlayback?.();
       audio.pause();
       audio.src = '';
       audio.load();
@@ -99,6 +107,14 @@ export const useAudioTask = () => {
    * Handle audio playback with Live2D lip sync
    */
   const handleAudioPlayback = (options: AudioTaskOptions): Promise<void> => new Promise((resolve) => {
+    let settled = false;
+    const finish = (status: 'finished' | 'failed' | 'cancelled') => {
+      if (settled) return;
+      settled = true;
+      options.onLifecycle?.(status);
+      options.onSettled?.();
+      resolve();
+    };
     const {
       aiState: currentAiState,
       setSubtitleText: updateSubtitle,
@@ -109,7 +125,7 @@ export const useAudioTask = () => {
     // Skip if already interrupted
     if (currentAiState === 'interrupted') {
       console.warn('Audio playback blocked by interruption state.');
-      resolve();
+      finish('failed');
       return;
     }
 
@@ -140,14 +156,14 @@ export const useAudioTask = () => {
         const live2dManager = (window as any).getLive2DManager?.();
         if (!live2dManager) {
           console.error('Live2D manager not found');
-          resolve();
+          finish('failed');
           return;
         }
 
         const model = live2dManager.getModel(0);
         if (!model) {
           console.error('Live2D model not found at index 0');
-          resolve();
+          finish('failed');
           return;
         }
         console.log('Found model for audio playback');
@@ -185,16 +201,20 @@ export const useAudioTask = () => {
         currentAudioRef.current = audio;
         let isFinished = false;
 
-        const cleanup = () => {
+        const cleanup = (status: 'finished' | 'failed' | 'cancelled') => {
           if (currentAudioRef.current === audio) {
             currentAudioRef.current = null;
             currentModelRef.current = null;
           }
           if (!isFinished) {
             isFinished = true;
-            resolve();
+            cancelPlayback = undefined;
+            finish(status);
           }
         };
+
+        cancelPlayback = () => cleanup('cancelled');
+        audio.addEventListener('playing', () => options.onLifecycle?.('started'), { once: true });
 
         // Enhance lip sync sensitivity
         const lipSyncScale = 2.0;
@@ -203,14 +223,14 @@ export const useAudioTask = () => {
           // Check for interruption before playback
           if (stateRef.current.aiState === 'interrupted' || currentAudioRef.current !== audio) {
             console.warn('Audio playback cancelled due to interruption or new audio');
-            cleanup();
+            cleanup('cancelled');
             return;
           }
 
           console.log('Starting audio playback with lip sync');
           audio.play().catch((err) => {
             console.error("Audio play error:", err);
-            cleanup();
+            cleanup('failed');
           });
 
           // Setup lip sync
@@ -238,17 +258,17 @@ export const useAudioTask = () => {
 
         audio.addEventListener('ended', () => {
           console.log("Audio playback completed");
-          cleanup();
+          cleanup('finished');
         });
 
         audio.addEventListener('error', (error) => {
           console.error("Audio playback error:", error);
-          cleanup();
+          cleanup('failed');
         });
 
         audio.load();
       } else {
-        resolve();
+        finish('failed');
       }
     } catch (error) {
       console.error('Audio playback setup error:', error);
@@ -259,7 +279,7 @@ export const useAudioTask = () => {
       });
       currentAudioRef.current = null;
       currentModelRef.current = null;
-      resolve();
+      finish('failed');
     }
   });
 
@@ -291,6 +311,7 @@ export const useAudioTask = () => {
 
     if (currentState === 'interrupted') {
       console.log('Skipping audio task due to interrupted state');
+      options.onLifecycle?.('cancelled'); options.onSettled?.();
       return;
     }
 

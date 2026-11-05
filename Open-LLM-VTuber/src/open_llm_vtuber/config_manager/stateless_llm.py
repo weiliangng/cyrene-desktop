@@ -28,6 +28,7 @@ class StatelessLLMWithTemplate(StatelessLLMBaseConfig):
     base_url: str = Field(..., alias="base_url")
     llm_api_key: str = Field(..., alias="llm_api_key")
     model: str = Field(..., alias="model")
+    request_user: str | None = Field(None, alias="request_user")
     organization_id: str | None = Field(None, alias="organization_id")
     project_id: str | None = Field(None, alias="project_id")
     template: str | None = Field(None, alias="template")
