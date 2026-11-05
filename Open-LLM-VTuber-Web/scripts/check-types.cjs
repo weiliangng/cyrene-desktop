@@ -4,6 +4,7 @@ const path = require('node:path');
 const fs = require('node:fs');
 const root = path.resolve(__dirname, '..');
 const snapshot = JSON.parse(fs.readFileSync(path.join(__dirname, 'upstream-v1.2.1.json'), 'utf8'));
+const upstreamFiles = new Set(JSON.parse(fs.readFileSync(path.join(__dirname, 'upstream-files-v1.2.1.json'), 'utf8')).map(p => path.resolve(root, p).toLowerCase()));
 const originals = new Map(Object.entries(snapshot).map(([p, content]) => [path.resolve(root, p).toLowerCase(), content]));
 function check(baseline) {
   const config = ts.readConfigFile(path.join(root, 'tsconfig.web.json'), ts.sys.readFile);
@@ -11,7 +12,8 @@ function check(baseline) {
   const host = ts.createCompilerHost(parsed.options);
   const read = host.readFile;
   if (baseline) host.readFile = p => originals.get(path.resolve(p).toLowerCase()) ?? read(p);
-  const program = ts.createProgram(parsed.fileNames, { ...parsed.options, noEmit: true, incremental: false }, host);
+  const files = baseline ? parsed.fileNames.filter(p => upstreamFiles.has(path.resolve(p).toLowerCase())) : parsed.fileNames;
+  const program = ts.createProgram(files, { ...parsed.options, noEmit: true, incremental: false }, host);
   return ts.getPreEmitDiagnostics(program).map(d => ({
     file: path.relative(root, d.file?.fileName || root), code: d.code,
     message: ts.flattenDiagnosticMessageText(d.messageText, '\n'),

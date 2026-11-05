@@ -13,6 +13,8 @@ declare global {
 }
 
 const api = {
+  savePetLayout: (layout: unknown) => ipcRenderer.send('cyrene-save-layout', layout),
+  getSavedPetLayout: () => ipcRenderer.sendSync('cyrene-read-layout'),
   setIgnoreMouseEvents: (ignore: boolean) => {
     ipcRenderer.send('set-ignore-mouse-events', ignore);
   },

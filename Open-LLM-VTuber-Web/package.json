@@ -24,7 +24,7 @@
     "build:web": "vite build --config vite.config.ts --mode web",
     "extract-translations": "i18next-scanner --config i18next-scanner.config.js",
     "package:local": "electron-builder --dir --win --x64 --publish never",
-    "test:cyrene": "node scripts/test-cyrene.cjs",
+    "test:cyrene": "node scripts/test-cyrene.cjs && node scripts/test-layout.cjs",
     "typecheck:comparison": "node scripts/check-types.cjs"
   },
   "dependencies": {

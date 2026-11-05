@@ -6,6 +6,7 @@ import { ModelInfo } from '@/context/live2d-config-context';
 import { LAppDelegate } from '../../../WebSDK/src/lappdelegate';
 import { LAppLive2DManager } from '../../../WebSDK/src/lapplive2dmanager';
 import { useMode } from '@/context/mode-context';
+import { readPetLayout } from '@/pet/layout';
 
 // Constants for model scaling behavior
 const MIN_SCALE = 0.1;
@@ -55,12 +56,23 @@ export const useLive2DResize = ({
   const isResizingRef = useRef<boolean>(false);
 
   // Initialize scale references
-  const initialScale = modelInfo?.kScale || DEFAULT_SCALE;
+  const initialScale = (isPet && modelInfo?.name === 'cyrene' ? readPetLayout(window.localStorage)?.matrix[0] : undefined) || modelInfo?.kScale || DEFAULT_SCALE;
   const lastScaleRef = useRef<number>(initialScale);
   const targetScaleRef = useRef<number>(initialScale);
   const animationFrameRef = useRef<number>();
   const isAnimatingRef = useRef<boolean>(false);
   const hasAppliedInitialScale = useRef<boolean>(false);
+
+  useEffect(() => {
+    const restored = (event: Event) => {
+      const scale = (event as CustomEvent<{ scale: number }>).detail.scale;
+      if (!Number.isFinite(scale) || scale <= 0) return;
+      lastScaleRef.current = scale;
+      targetScaleRef.current = scale;
+    };
+    window.addEventListener('cyrene-layout-restored', restored);
+    return () => window.removeEventListener('cyrene-layout-restored', restored);
+  }, []);
 
   // Previous container dimensions for change detection
   const lastContainerDimensionsRef = useRef<{width: number, height: number}>({ width: 0, height: 0 });
@@ -72,7 +84,7 @@ export const useLive2DResize = ({
    * Reset scale state when model changes
    */
   useEffect(() => {
-    const newInitialScale = modelInfo?.kScale || DEFAULT_SCALE;
+    const newInitialScale = (isPet && modelInfo?.name === 'cyrene' ? readPetLayout(window.localStorage)?.matrix[0] : undefined) || modelInfo?.kScale || DEFAULT_SCALE;
     lastScaleRef.current = newInitialScale;
     targetScaleRef.current = newInitialScale;
     hasAppliedInitialScale.current = false;

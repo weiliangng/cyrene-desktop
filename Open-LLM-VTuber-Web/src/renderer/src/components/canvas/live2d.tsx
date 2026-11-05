@@ -13,6 +13,7 @@ import { useLive2DExpression } from "@/hooks/canvas/use-live2d-expression";
 import { useForceIgnoreMouse } from "@/hooks/utils/use-force-ignore-mouse";
 import { useMode } from "@/context/mode-context";
 import { useCyreneIdle } from '@/pet/use-cyrene-idle';
+import { usePetLayout } from '@/pet/use-pet-layout';
 
 interface Live2DProps {
   showSidebar?: boolean;
@@ -28,6 +29,7 @@ export const Live2D = memo(
     const { resetExpression } = useLive2DExpression();
     const isPet = mode === 'pet';
     useCyreneIdle(modelInfo);
+    usePetLayout(modelInfo);
 
     // Get canvasRef from useLive2DResize
     const { canvasRef } = useLive2DResize({

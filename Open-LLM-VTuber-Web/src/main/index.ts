@@ -2,7 +2,7 @@
 import { app, ipcMain, globalShortcut, desktopCapturer, protocol, net } from "electron";
 import { join, resolve, relative, isAbsolute } from 'path';
 import { pathToFileURL } from 'url';
-import { appendFileSync, mkdirSync } from 'fs';
+import { appendFileSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { electronApp, optimizer } from "@electron-toolkit/utils";
 import { WindowManager } from "./window-manager";
 import { MenuManager } from "./menu-manager";
@@ -21,7 +21,28 @@ protocol.registerSchemesAsPrivileged([{
   scheme: 'cyrene', privileges: { standard: true, secure: true, supportFetchAPI: true, corsEnabled: true },
 }]);
 
+let lastLayoutJson = '';
 function setupIPC(): void {
+  const layoutFile = join(stateDir, 'pet-layout.json');
+  ipcMain.on('cyrene-read-layout', (event) => {
+    try { event.returnValue = JSON.parse(readFileSync(layoutFile, 'utf8')); }
+    catch { event.returnValue = null; }
+  });
+  ipcMain.on('cyrene-save-layout', (event, value) => {
+    if (event.sender !== windowManager.getWindow()?.webContents) return;
+    const matrix = value?.matrix;
+    if (value?.version !== 1 || !Array.isArray(matrix) || matrix.length !== 16
+      || !matrix.every(Number.isFinite) || matrix[0] <= 0 || matrix[0] > 20
+      || matrix[5] <= 0 || matrix[5] > 20 || Math.abs(matrix[12]) > 100
+      || Math.abs(matrix[13]) > 100 || matrix[15] !== 1) return;
+    const json = JSON.stringify({ version: 1, matrix });
+    if (json !== lastLayoutJson) {
+      try {
+        writeFileSync(layoutFile, json, 'utf8');
+        lastLayoutJson = json;
+      } catch (error) { console.warn('Could not save pet layout:', error); }
+    }
+  });
   ipcMain.handle("get-platform", () => process.platform);
 
   ipcMain.on("set-ignore-mouse-events", (_event, ignore: boolean) => {

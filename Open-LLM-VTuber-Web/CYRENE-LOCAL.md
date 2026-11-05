@@ -31,8 +31,12 @@ npm.cmd run build
 node node_modules/electron-builder/cli.js --dir --win --x64 --publish never
 ```
 
-Close the custom client before replacing a running build. Output: `release/local/win-unpacked/Cyrene Desktop.exe`.
+Close the custom client before replacing a running build. Output: `release/layout/win-unpacked/Cyrene Desktop.exe`.
 
 Checks: `node scripts/test-cyrene.cjs`, `npm.cmd run typecheck:node`, and `node scripts/check-types.cjs`. The release's full frontend typecheck already has 585 diagnostics in its SDK/application code. The comparison script checks for added diagnostics instead of claiming the full check passes.
 
 This is a private local build containing the user's model assets. Keep the creator's original notes and usage restrictions with the original ZIP; do not publish the packaged model or this build.
+
+## Remembered layout
+
+Drag and wheel-resize Cyrene in Pet Mode to set the startup layout. The model transform is saved automatically in local storage and mirrored to `../tmp/cyrene-desktop-state/pet-layout.json`. The renderer restores it after textures load and synchronizes wheel scaling to avoid a jump on the first resize. Invalid settings are ignored. Old builds did not persist transforms: position/size must be set once after updating unless manually captured beforehand.
