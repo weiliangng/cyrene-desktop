@@ -1,0 +1,34 @@
+{
+  "modelUrl": "/live2d-models/cyrene/cyrene.model3.json",
+  "expressions": [
+    "neutral",
+    "angry",
+    "cry",
+    "happy",
+    "blush",
+    "playful",
+    "star_eyes",
+    "hurt",
+    "sleep",
+    "sweat",
+    "confused",
+    "wink"
+  ],
+  "keyParameters": {
+    "tab": "Param29",
+    "1": "Param30",
+    "2": "Param31",
+    "3": "Param32",
+    "4": "Param33",
+    "shift": "Param34",
+    "q": "Param35",
+    "w": "Param36",
+    "e": "Param37",
+    "r": "Param38",
+    " ": "Param39",
+    "a": "Param40",
+    "s": "Param41",
+    "d": "Param42",
+    "f": "Param43"
+  }
+}

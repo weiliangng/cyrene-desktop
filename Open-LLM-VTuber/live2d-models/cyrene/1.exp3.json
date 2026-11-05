@@ -1,0 +1,115 @@
+{
+  "Type": "Live2D Expression",
+  "Parameters": [
+    {
+      "Id": "Param29",
+      "Value": 0.0,
+      "Blend": "Add"
+    },
+    {
+      "Id": "Param30",
+      "Value": 1.0,
+      "Blend": "Add"
+    },
+    {
+      "Id": "Param31",
+      "Value": 0.0,
+      "Blend": "Add"
+    },
+    {
+      "Id": "Param32",
+      "Value": 0.0,
+      "Blend": "Add"
+    },
+    {
+      "Id": "Param33",
+      "Value": 0.0,
+      "Blend": "Add"
+    },
+    {
+      "Id": "Param34",
+      "Value": 0.0,
+      "Blend": "Add"
+    },
+    {
+      "Id": "Param35",
+      "Value": 0.0,
+      "Blend": "Add"
+    },
+    {
+      "Id": "Param36",
+      "Value": 0.0,
+      "Blend": "Add"
+    },
+    {
+      "Id": "Param37",
+      "Value": 0.0,
+      "Blend": "Add"
+    },
+    {
+      "Id": "Param38",
+      "Value": 0.0,
+      "Blend": "Add"
+    },
+    {
+      "Id": "Param39",
+      "Value": 0.0,
+      "Blend": "Add"
+    },
+    {
+      "Id": "Param40",
+      "Value": 0.0,
+      "Blend": "Add"
+    },
+    {
+      "Id": "Param41",
+      "Value": 0.0,
+      "Blend": "Add"
+    },
+    {
+      "Id": "Param42",
+      "Value": 0.0,
+      "Blend": "Add"
+    },
+    {
+      "Id": "Param43",
+      "Value": 0.0,
+      "Blend": "Add"
+    },
+    {
+      "Id": "CatParamLeftHandDown",
+      "Value": 1.0,
+      "Blend": "Add"
+    },
+    {
+      "Id": "Param24",
+      "Value": 1,
+      "Blend": "Overwrite"
+    },
+    {
+      "Id": "Param23",
+      "Value": -1,
+      "Blend": "Overwrite"
+    },
+    {
+      "Id": "Param25",
+      "Value": -1,
+      "Blend": "Overwrite"
+    },
+    {
+      "Id": "Param26",
+      "Value": -1,
+      "Blend": "Overwrite"
+    },
+    {
+      "Id": "Param27",
+      "Value": -1,
+      "Blend": "Overwrite"
+    },
+    {
+      "Id": "Param28",
+      "Value": -1,
+      "Blend": "Overwrite"
+    }
+  ]
+}

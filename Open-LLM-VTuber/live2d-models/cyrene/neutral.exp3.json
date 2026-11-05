@@ -1,0 +1,112 @@
+{
+  "Type": "Live2D Expression",
+  "FadeInTime": 0.15,
+  "FadeOutTime": 0.15,
+  "Parameters": [
+    {
+      "Id": "Param10",
+      "Value": 0,
+      "Blend": "Overwrite"
+    },
+    {
+      "Id": "Param11",
+      "Value": 0,
+      "Blend": "Overwrite"
+    },
+    {
+      "Id": "Param12",
+      "Value": 0,
+      "Blend": "Overwrite"
+    },
+    {
+      "Id": "Param13",
+      "Value": 0,
+      "Blend": "Overwrite"
+    },
+    {
+      "Id": "Param14",
+      "Value": 0,
+      "Blend": "Overwrite"
+    },
+    {
+      "Id": "Param15",
+      "Value": 0,
+      "Blend": "Overwrite"
+    },
+    {
+      "Id": "Param16",
+      "Value": 0,
+      "Blend": "Overwrite"
+    },
+    {
+      "Id": "Param19",
+      "Value": 0,
+      "Blend": "Overwrite"
+    },
+    {
+      "Id": "Param21",
+      "Value": 0,
+      "Blend": "Overwrite"
+    },
+    {
+      "Id": "Param4",
+      "Value": 0,
+      "Blend": "Overwrite"
+    },
+    {
+      "Id": "Param5",
+      "Value": 0,
+      "Blend": "Overwrite"
+    },
+    {
+      "Id": "Param6",
+      "Value": 0,
+      "Blend": "Overwrite"
+    },
+    {
+      "Id": "Param7",
+      "Value": 0,
+      "Blend": "Overwrite"
+    },
+    {
+      "Id": "Param8",
+      "Value": 0,
+      "Blend": "Overwrite"
+    },
+    {
+      "Id": "Param9",
+      "Value": 0,
+      "Blend": "Overwrite"
+    },
+    {
+      "Id": "Param24",
+      "Value": 1,
+      "Blend": "Overwrite"
+    },
+    {
+      "Id": "Param23",
+      "Value": -1,
+      "Blend": "Overwrite"
+    },
+    {
+      "Id": "Param25",
+      "Value": -1,
+      "Blend": "Overwrite"
+    },
+    {
+      "Id": "Param26",
+      "Value": -1,
+      "Blend": "Overwrite"
+    },
+    {
+      "Id": "Param27",
+      "Value": -1,
+      "Blend": "Overwrite"
+    },
+    {
+      "Id": "Param28",
+      "Value": -1,
+      "Blend": "Overwrite"
+    }
+  ]
+}

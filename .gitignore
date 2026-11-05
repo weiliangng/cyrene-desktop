@@ -1,0 +1,26 @@
+# Local dependencies, binaries, caches and conversations
+**/.git/
+**/node_modules/
+**/.venv/
+**/__pycache__/
+**/*.pyc
+**/.env
+**/.env.*
+!**/.env.example
+**/logs/
+**/cache/
+**/chat_history/
+**/*.pid
+**/*.log
+**/out/
+**/release/
+**/dist/
+/tmp/
+/Open-LLM-VTuber/models/
+/Open-LLM-VTuber/tools/ffmpeg/
+/Open-LLM-VTuber/conf.yaml
+/Open-LLM-VTuber/conf.yaml.backup
+/Open-LLM-VTuber/mcp_servers.json
+**/cyrene-core-verification.json
+**/cyrene-package-verification.json
+**/cyrene-typecheck.json

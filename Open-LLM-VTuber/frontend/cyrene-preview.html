@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cyrene — Live2D Preview</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#171820;color:#eee;font:15px system-ui,sans-serif;height:100vh;display:grid;grid-template-columns:minmax(300px,1fr) 310px}
+iframe{width:100%;height:100%;border:0;background:#fff}aside{padding:24px;overflow:auto;border-left:1px solid #43404f}h1{font-size:25px;margin:0 0 8px}h2{font-size:15px;margin:24px 0 12px}p{color:#bdb9c8;line-height:1.5;font-size:13px}a{color:#eea6d0}.buttons{display:grid;grid-template-columns:1fr 1fr;gap:8px}button{padding:10px 6px;border:1px solid #514458;background:#302734;color:#f8e9f2;border-radius:8px;cursor:pointer;font:inherit;font-size:13px}button.active{background:#a14579;border-color:#f2a0ce}button:disabled{opacity:.4;cursor:wait}textarea{width:100%;height:95px;resize:vertical;border:1px solid #625568;border-radius:8px;background:#24202a;color:white;padding:10px;font:inherit}input[type=range]{width:100%;accent-color:#e68bbd}#status{font-size:13px;color:#d6a8c2;min-height:38px}label{font-size:13px}small{color:#a6a0b0}@media(max-width:700px){body{grid-template-columns:1fr;grid-template-rows:60vh auto;height:auto}iframe{min-height:60vh}aside{border:0}}
+</style>
+<iframe id="app" src="/" title="Open-LLM-VTuber model preview" allow="autoplay"></iframe>
+<aside>
+<h1>Cyrene preview</h1>
+<p>Try her expressions, typing poses and mouth movement. Drag or scroll over the model to reposition or resize her.</p>
+<div id="status" role="status">Connecting to Open-LLM-VTuber…</div>
+<h2>Expressions</h2><div id="expressions" class="buttons"></div>
+<h2>Keyboard tapping</h2>
+<label><input id="keyboard" type="checkbox" checked> React to typing below</label>
+<p>Supported keys: Q W E R A S D F, 1–4, Shift, Space and Tab. Other keys use a simple tapping pose. Input stays on this page.</p>
+<textarea id="typing" placeholder="Type here to try her keyboard…" aria-label="Keyboard animation preview" spellcheck="false"></textarea>
+<h2>Mouth movement</h2><input id="mouth" type="range" min="0" max="1" step="0.01" value="0" aria-label="Mouth opening">
+<p>Manual lip-sync check; no microphone needed.</p>
+<p><a href="/" target="_blank">Open the full application</a></p>
+<small>This setup is for previewing the model. AI chat needs an LLM connection configured separately.</small>
+</aside>
+<script>
+const frame=document.querySelector('#app'),status=document.querySelector('#status');
+const labels={neutral:'Neutral',angry:'Angry',cry:'Crying',happy:'Happy',blush:'Blush',playful:'Tongue out',star_eyes:'Star eyes',hurt:'Hurt',sleep:'Sleeping',sweat:'Sweating',confused:'Surprised',wink:'Wink'};
+let config,model,currentExpression='neutral',mouth=0;
+const held=new Set(),typing=document.querySelector('#typing');
+function getModel(){try{return frame.contentWindow.getLive2DManager?.().getModel(0)}catch{return null}}
+function applyExpression(name){const m=getModel();if(!m?._model)return;currentExpression=name;m.setExpression(name);document.querySelectorAll('[data-expression]').forEach(b=>b.classList.toggle('active',b.dataset.expression===name))}
+function hookModel(m){
+ const cubism=m._model,core=cubism._model;
+ if(!core?.parameters)return false;
+ const parameters=core.parameters,index=new Map(Array.from(parameters.ids,(name,i)=>[name,i]));
+ const set=(name,value)=>{const i=index.get(name);if(i!==undefined)parameters.values[i]=value};
+ const update=cubism.update.bind(cubism);
+ cubism.update=function(){
+  let tapping=false;
+  for(const [key,param] of Object.entries(config.keyParameters)){const down=held.has(key);set(param,down?1:0);tapping||=down}
+  if(held.size)tapping=true;
+  set('CatParamLeftHandDown',tapping?1:0);
+  set('ParamMouthOpenY',mouth);
+  // The creator's watermark.exp3.json preset sets Param24 to 1 to hide it.
+  set('Param24',1);
+  for(const id of ['Param23','Param25','Param26','Param27','Param28'])set(id,-1);
+  update();
+ };
+ model=m;applyExpression(currentExpression);
+ document.querySelectorAll('button').forEach(b=>b.disabled=false);
+ status.textContent='Cyrene loaded. Expressions and keyboard preview are ready.';
+ document.body.dataset.modelReady='true';
+ return true;
+}
+fetch('/cyrene-preview-config.json').then(r=>r.json()).then(data=>{
+ config=data;
+ for(const name of config.expressions){const b=document.createElement('button');b.textContent=labels[name]||name;b.dataset.expression=name;b.disabled=true;b.onclick=()=>applyExpression(name);document.querySelector('#expressions').append(b)}
+ const started=Date.now();const timer=setInterval(()=>{const m=getModel();if(m?._model&&m._state>=0&&m!==model){try{hookModel(m)}catch(e){status.textContent='Model controls: '+e.message}}if(!model&&Date.now()-started>45000)status.textContent='Still loading. Check the application connection or reload the page.'},400);
+});
+typing.addEventListener('keydown',e=>{if(!document.querySelector('#keyboard').checked)return;if(e.key==='Tab')e.preventDefault();held.add(e.key.toLowerCase())});
+typing.addEventListener('keyup',e=>held.delete(e.key.toLowerCase()));
+typing.addEventListener('blur',()=>held.clear());window.addEventListener('blur',()=>held.clear());
+document.querySelector('#keyboard').onchange=()=>held.clear();
+document.querySelector('#mouth').oninput=e=>{mouth=Number(e.target.value)};
+</script>
+</html>

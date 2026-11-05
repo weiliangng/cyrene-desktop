@@ -1,0 +1,573 @@
+{
+	"Version": 3,
+	"Parameters": [
+		{
+			"Id": "Param29",
+			"GroupId": "ParamGroup",
+			"Name": "tab"
+		},
+		{
+			"Id": "Param30",
+			"GroupId": "ParamGroup",
+			"Name": "1"
+		},
+		{
+			"Id": "Param31",
+			"GroupId": "ParamGroup",
+			"Name": "2"
+		},
+		{
+			"Id": "Param32",
+			"GroupId": "ParamGroup",
+			"Name": "3"
+		},
+		{
+			"Id": "Param33",
+			"GroupId": "ParamGroup",
+			"Name": "4"
+		},
+		{
+			"Id": "Param34",
+			"GroupId": "ParamGroup",
+			"Name": "shift"
+		},
+		{
+			"Id": "Param35",
+			"GroupId": "ParamGroup",
+			"Name": "q"
+		},
+		{
+			"Id": "Param36",
+			"GroupId": "ParamGroup",
+			"Name": "w"
+		},
+		{
+			"Id": "Param37",
+			"GroupId": "ParamGroup",
+			"Name": "e"
+		},
+		{
+			"Id": "Param38",
+			"GroupId": "ParamGroup",
+			"Name": "r"
+		},
+		{
+			"Id": "Param39",
+			"GroupId": "ParamGroup",
+			"Name": "kg"
+		},
+		{
+			"Id": "Param40",
+			"GroupId": "ParamGroup",
+			"Name": "a"
+		},
+		{
+			"Id": "Param41",
+			"GroupId": "ParamGroup",
+			"Name": "s"
+		},
+		{
+			"Id": "Param42",
+			"GroupId": "ParamGroup",
+			"Name": "d"
+		},
+		{
+			"Id": "Param43",
+			"GroupId": "ParamGroup",
+			"Name": "f"
+		},
+		{
+			"Id": "CatParamLeftHandDown",
+			"GroupId": "",
+			"Name": "左手HD"
+		},
+		{
+			"Id": "CatParamRightHandDown",
+			"GroupId": "",
+			"Name": "右手按下"
+		},
+		{
+			"Id": "CatParamStickShowLeftHand",
+			"GroupId": "",
+			"Name": "显示摇杆左手"
+		},
+		{
+			"Id": "CatParamStickShowRightHand",
+			"GroupId": "",
+			"Name": "显示摇杆右手"
+		},
+		{
+			"Id": "CatParamStickLX",
+			"GroupId": "",
+			"Name": "左摇杆X"
+		},
+		{
+			"Id": "CatParamStickLY",
+			"GroupId": "",
+			"Name": "左摇杆Y"
+		},
+		{
+			"Id": "CatParamStickRX",
+			"GroupId": "",
+			"Name": "右摇杆X"
+		},
+		{
+			"Id": "CatParamStickRY",
+			"GroupId": "",
+			"Name": "右摇杆Y"
+		},
+		{
+			"Id": "Param24",
+			"GroupId": "",
+			"Name": "水印"
+		},
+		{
+			"Id": "Param",
+			"GroupId": "",
+			"Name": "头发1"
+		},
+		{
+			"Id": "Param2",
+			"GroupId": "",
+			"Name": "头发2"
+		},
+		{
+			"Id": "Param3",
+			"GroupId": "",
+			"Name": "头发3"
+		},
+		{
+			"Id": "Param18",
+			"GroupId": "",
+			"Name": "眼光"
+		},
+		{
+			"Id": "Param4",
+			"GroupId": "",
+			"Name": "生气"
+		},
+		{
+			"Id": "Param5",
+			"GroupId": "",
+			"Name": "哭"
+		},
+		{
+			"Id": "Param11",
+			"GroupId": "",
+			"Name": "笑"
+		},
+		{
+			"Id": "Param6",
+			"GroupId": "",
+			"Name": "脸红"
+		},
+		{
+			"Id": "Param7",
+			"GroupId": "",
+			"Name": "调皮"
+		},
+		{
+			"Id": "Param8",
+			"GroupId": "",
+			"Name": "星星眼"
+		},
+		{
+			"Id": "Param10",
+			"GroupId": "",
+			"Name": "委屈"
+		},
+		{
+			"Id": "Param12",
+			"GroupId": "",
+			"Name": "睡觉"
+		},
+		{
+			"Id": "Param13",
+			"GroupId": "",
+			"Name": "无语"
+		},
+		{
+			"Id": "Param19",
+			"GroupId": "",
+			"Name": "呆"
+		},
+		{
+			"Id": "Param9",
+			"GroupId": "",
+			"Name": "wink"
+		},
+		{
+			"Id": "Param20",
+			"GroupId": "",
+			"Name": "头环"
+		},
+		{
+			"Id": "Param22",
+			"GroupId": "",
+			"Name": "迷迷"
+		},
+		{
+			"Id": "Param14",
+			"GroupId": "",
+			"Name": "眼睛掩藏"
+		},
+		{
+			"Id": "Param15",
+			"GroupId": "",
+			"Name": "普通嘴巴掩藏"
+		},
+		{
+			"Id": "Param16",
+			"GroupId": "",
+			"Name": "眉毛切换"
+		},
+		{
+			"Id": "Param44",
+			"GroupId": "",
+			"Name": "VTS气泡切换"
+		},
+		{
+			"Id": "Param17",
+			"GroupId": "",
+			"Name": "鼠标掩藏"
+		},
+		{
+			"Id": "Param21",
+			"GroupId": "",
+			"Name": "右眼掩藏"
+		},
+		{
+			"Id": "Param23",
+			"GroupId": "",
+			"Name": "动画手"
+		},
+		{
+			"Id": "Param28",
+			"GroupId": "",
+			"Name": "动画眼睛"
+		},
+		{
+			"Id": "Param25",
+			"GroupId": "",
+			"Name": "动画手2"
+		},
+		{
+			"Id": "Param27",
+			"GroupId": "",
+			"Name": "动画1"
+		},
+		{
+			"Id": "Param26",
+			"GroupId": "",
+			"Name": "爱心"
+		},
+		{
+			"Id": "ParamAngleX",
+			"GroupId": "",
+			"Name": "角度 X"
+		},
+		{
+			"Id": "ParamAngleY",
+			"GroupId": "",
+			"Name": "角度 Y"
+		},
+		{
+			"Id": "ParamAngleZ",
+			"GroupId": "",
+			"Name": "角度 Z"
+		},
+		{
+			"Id": "ParamEyeLOpen",
+			"GroupId": "",
+			"Name": "左眼　开闭"
+		},
+		{
+			"Id": "ParamEyeLSmile",
+			"GroupId": "",
+			"Name": "左眼　微笑"
+		},
+		{
+			"Id": "ParamEyeROpen",
+			"GroupId": "",
+			"Name": "右眼　开闭"
+		},
+		{
+			"Id": "ParamEyeRSmile",
+			"GroupId": "",
+			"Name": "右眼　微笑"
+		},
+		{
+			"Id": "ParamEyeBallX",
+			"GroupId": "",
+			"Name": "眼珠 X"
+		},
+		{
+			"Id": "ParamEyeBallY",
+			"GroupId": "",
+			"Name": "眼珠 Y"
+		},
+		{
+			"Id": "ParamBrowLY",
+			"GroupId": "",
+			"Name": "左眉上下"
+		},
+		{
+			"Id": "ParamBrowRY",
+			"GroupId": "",
+			"Name": "右眉　上下"
+		},
+		{
+			"Id": "ParamBrowLX",
+			"GroupId": "",
+			"Name": "左眉　左右"
+		},
+		{
+			"Id": "ParamBrowRX",
+			"GroupId": "",
+			"Name": "右眉　左右"
+		},
+		{
+			"Id": "ParamBrowLAngle",
+			"GroupId": "",
+			"Name": "左眉　角度"
+		},
+		{
+			"Id": "ParamBrowRAngle",
+			"GroupId": "",
+			"Name": "右眉　角度"
+		},
+		{
+			"Id": "ParamBrowLForm",
+			"GroupId": "",
+			"Name": "左眉　変形"
+		},
+		{
+			"Id": "ParamBrowRForm",
+			"GroupId": "",
+			"Name": "右眉　変形"
+		},
+		{
+			"Id": "ParamMouthForm",
+			"GroupId": "",
+			"Name": "嘴　变形"
+		},
+		{
+			"Id": "ParamMouthOpenY",
+			"GroupId": "",
+			"Name": "嘴　张开和闭合"
+		},
+		{
+			"Id": "ParamCheek",
+			"GroupId": "",
+			"Name": "脸颊泛红"
+		},
+		{
+			"Id": "ParamBodyAngleX",
+			"GroupId": "",
+			"Name": "身体旋转　X"
+		},
+		{
+			"Id": "ParamBodyAngleY",
+			"GroupId": "",
+			"Name": "身体旋转　Y"
+		},
+		{
+			"Id": "ParamBodyAngleZ",
+			"GroupId": "",
+			"Name": "身体旋转　Z"
+		},
+		{
+			"Id": "ParamBreath",
+			"GroupId": "",
+			"Name": "呼吸"
+		},
+		{
+			"Id": "ParamHairFront",
+			"GroupId": "",
+			"Name": "摇动 前发"
+		},
+		{
+			"Id": "ParamHairSide",
+			"GroupId": "",
+			"Name": "摇动 侧发"
+		},
+		{
+			"Id": "ParamHairBack",
+			"GroupId": "",
+			"Name": "摇动 后发"
+		},
+		{
+			"Id": "ParamMouseX",
+			"GroupId": "",
+			"Name": "MX"
+		},
+		{
+			"Id": "ParamMouseY",
+			"GroupId": "",
+			"Name": "MY"
+		},
+		{
+			"Id": "ParamMouseLeftDown",
+			"GroupId": "",
+			"Name": "LD"
+		},
+		{
+			"Id": "ParamMouseRightDown",
+			"GroupId": "",
+			"Name": "RD"
+		}
+	],
+	"ParameterGroups": [
+		{
+			"Id": "ParamGroup",
+			"GroupId": "",
+			"Name": "Folder 1"
+		}
+	],
+	"Parts": [
+		{
+			"Id": "Part31",
+			"Name": "VTS气泡"
+		},
+		{
+			"Id": "Part25",
+			"Name": "动画手臂.psd"
+		},
+		{
+			"Id": "Part23",
+			"Name": "动画手"
+		},
+		{
+			"Id": "Part21",
+			"Name": "迷迷"
+		},
+		{
+			"Id": "Part5",
+			"Name": "后发改.psd"
+		},
+		{
+			"Id": "Part",
+			"Name": "新建组"
+		},
+		{
+			"Id": "Part4",
+			"Name": "上层眉毛"
+		},
+		{
+			"Id": "Part6",
+			"Name": "新建组"
+		},
+		{
+			"Id": "Part8",
+			"Name": "脸"
+		},
+		{
+			"Id": "Part30",
+			"Name": "1200-1040.psd"
+		},
+		{
+			"Id": "Part41",
+			"Name": "1200-1040.psd"
+		},
+		{
+			"Id": "Part20",
+			"Name": "工程图.psd"
+		},
+		{
+			"Id": "Part2",
+			"Name": "表情"
+		},
+		{
+			"Id": "Part27",
+			"Name": "手柄右手"
+		},
+		{
+			"Id": "Part22",
+			"Name": "前发"
+		},
+		{
+			"Id": "Part45",
+			"Name": "手柄"
+		},
+		{
+			"Id": "Part3",
+			"Name": "上眉毛"
+		},
+		{
+			"Id": "Part7",
+			"Name": "花"
+		},
+		{
+			"Id": "Part10",
+			"Name": "前发"
+		},
+		{
+			"Id": "Part11",
+			"Name": "下眉毛"
+		},
+		{
+			"Id": "Part9",
+			"Name": "表情"
+		},
+		{
+			"Id": "Part17",
+			"Name": "眼睛"
+		},
+		{
+			"Id": "Part18",
+			"Name": "嘴巴"
+		},
+		{
+			"Id": "Part26",
+			"Name": "眼睛"
+		},
+		{
+			"Id": "Part32",
+			"Name": "嘴巴"
+		},
+		{
+			"Id": "Part12",
+			"Name": "眼睛"
+		},
+		{
+			"Id": "Part33",
+			"Name": "VTS嘴"
+		},
+		{
+			"Id": "Part13",
+			"Name": "头"
+		},
+		{
+			"Id": "Part34",
+			"Name": "鼠标按键手"
+		},
+		{
+			"Id": "Part14",
+			"Name": "身体组"
+		},
+		{
+			"Id": "Part15",
+			"Name": "鼠标组"
+		},
+		{
+			"Id": "Part28",
+			"Name": "纯键盘"
+		},
+		{
+			"Id": "Part29",
+			"Name": "手柄"
+		},
+		{
+			"Id": "Part16",
+			"Name": "桌子"
+		},
+		{
+			"Id": "Part19",
+			"Name": "叶子"
+		},
+		{
+			"Id": "Part24",
+			"Name": "头环"
+		}
+	]
+}

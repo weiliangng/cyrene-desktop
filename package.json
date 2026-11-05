@@ -1,0 +1,11 @@
+{
+  "name": "cyrene-desktop-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "npm --prefix Open-LLM-VTuber-Web run build",
+    "package": "npm --prefix Open-LLM-VTuber-Web run package:local",
+    "test": "npm --prefix Open-LLM-VTuber-Web run test:cyrene && node scripts/verify_cyrene_core.cjs",
+    "typecheck:comparison": "npm --prefix Open-LLM-VTuber-Web run typecheck:comparison"
+  }
+}

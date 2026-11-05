@@ -1,0 +1,164 @@
+{
+  "Version": 3,
+  "FileReferences": {
+    "Moc": "cyrene.moc3",
+    "Textures": [
+      "cyrene.2048/texture_00.png",
+      "cyrene.2048/texture_01.png",
+      "cyrene.2048/texture_02.png"
+    ],
+    "Physics": "cyrene.physics3.json",
+    "DisplayInfo": "cyrene.cdi3.json",
+    "Expressions": [
+      {
+        "Name": "neutral",
+        "File": "neutral.exp3.json"
+      },
+      {
+        "Name": "angry",
+        "File": "angry.exp3.json"
+      },
+      {
+        "Name": "cry",
+        "File": "cry.exp3.json"
+      },
+      {
+        "Name": "happy",
+        "File": "happy.exp3.json"
+      },
+      {
+        "Name": "blush",
+        "File": "blush.exp3.json"
+      },
+      {
+        "Name": "playful",
+        "File": "playful.exp3.json"
+      },
+      {
+        "Name": "star_eyes",
+        "File": "star_eyes.exp3.json"
+      },
+      {
+        "Name": "hurt",
+        "File": "hurt.exp3.json"
+      },
+      {
+        "Name": "sleep",
+        "File": "sleep.exp3.json"
+      },
+      {
+        "Name": "sweat",
+        "File": "sweat.exp3.json"
+      },
+      {
+        "Name": "confused",
+        "File": "confused.exp3.json"
+      },
+      {
+        "Name": "wink",
+        "File": "wink.exp3.json"
+      },
+      {
+        "Name": "1",
+        "File": "1.exp3.json"
+      },
+      {
+        "Name": "2",
+        "File": "2.exp3.json"
+      },
+      {
+        "Name": "3",
+        "File": "3.exp3.json"
+      },
+      {
+        "Name": "4",
+        "File": "4.exp3.json"
+      },
+      {
+        "Name": "a",
+        "File": "a.exp3.json"
+      },
+      {
+        "Name": "d",
+        "File": "d.exp3.json"
+      },
+      {
+        "Name": "e",
+        "File": "e.exp3.json"
+      },
+      {
+        "Name": "f",
+        "File": "f.exp3.json"
+      },
+      {
+        "Name": "kg",
+        "File": "kg.exp3.json"
+      },
+      {
+        "Name": "ld",
+        "File": "ld.exp3.json"
+      },
+      {
+        "Name": "q",
+        "File": "q.exp3.json"
+      },
+      {
+        "Name": "r",
+        "File": "r.exp3.json"
+      },
+      {
+        "Name": "rd",
+        "File": "rd.exp3.json"
+      },
+      {
+        "Name": "s",
+        "File": "s.exp3.json"
+      },
+      {
+        "Name": "shift",
+        "File": "shift.exp3.json"
+      },
+      {
+        "Name": "tab",
+        "File": "tab.exp3.json"
+      },
+      {
+        "Name": "key_bubbles",
+        "File": "key_bubbles.exp3.json"
+      },
+      {
+        "Name": "w",
+        "File": "w.exp3.json"
+      },
+      {
+        "Name": "veil",
+        "File": "veil.exp3.json"
+      },
+      {
+        "Name": "watermark",
+        "File": "watermark.exp3.json"
+      },
+      {
+        "Name": "mimi",
+        "File": "mimi.exp3.json"
+      }
+    ]
+  },
+  "Groups": [
+    {
+      "Target": "Parameter",
+      "Name": "LipSync",
+      "Ids": [
+        "ParamMouthOpenY"
+      ]
+    },
+    {
+      "Target": "Parameter",
+      "Name": "EyeBlink",
+      "Ids": [
+        "ParamEyeLOpen",
+        "ParamEyeROpen"
+      ]
+    }
+  ]
+}

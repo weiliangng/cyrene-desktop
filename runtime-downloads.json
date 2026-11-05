@@ -1,0 +1,11 @@
+{
+  "sourceVersions": {
+    "backend": "v1.2.1",
+    "desktop": "7a2e214c3f266c294541127520dab7fce46787e7"
+  },
+  "asr": {
+    "url": "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2",
+    "model": "models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/model.int8.onnx",
+    "sha256": "c71f0ce00bec95b07744e116345e33d8cbbe08cef896382cf907bf4b51a2cd51"
+  }
+}
