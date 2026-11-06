@@ -23,6 +23,7 @@ import { useInterrupt } from '@/hooks/utils/use-interrupt';
 import { useBrowser } from '@/context/browser-context';
 import { useCyreneControl, cancelExternalSpeech } from '@/pet/use-cyrene-control';
 import { useDraft } from '@/pet/draft';
+import { useChatRun } from '@/pet/chat-run';
 import { externalState } from '@/pet/external-control';
 
 function WebSocketHandler({ children }: { children: React.ReactNode }) {
@@ -104,6 +105,7 @@ function WebSocketHandler({ children }: { children: React.ReactNode }) {
     console.log('Received message from server:', message);
     switch (message.type) {
       case 'chat.started':
+        if (!message.command_id || !useChatRun.getState().start(message.command_id)) break;
         relayTurn.current = message.command_id;
         if (typeof message.text === 'string') {
           const text = message.text;
@@ -112,10 +114,19 @@ function WebSocketHandler({ children }: { children: React.ReactNode }) {
           if (useDraft.getState().text === text) useDraft.getState().setText('');
         }
         clearResponse();
-        setAiState('thinking-speaking');
+        if (useChatRun.getState().phase !== 'stopping') setAiState('thinking-speaking');
+        break;
+      case 'chat.stopping':
+        if ((message.command_id || !useChatRun.getState().id) && useChatRun.getState().stop(message.command_id)) setAiState('interrupted');
+        break;
+      case 'chat.stop-pending':
+        toaster.create({ title: 'Still stopping OpenClaw. Press Stop again to retry.', type: 'warning', duration: 5000 });
+        break;
+      case 'chat.stopped':
+        if (useChatRun.getState().finish(message.command_id)) { relayTurn.current = undefined; setAiState('idle'); }
         break;
       case 'chat.delta':
-        if (relayTurn.current === message.command_id && typeof message.text === 'string') {
+        if (useChatRun.getState().phase !== 'stopping' && relayTurn.current === message.command_id && typeof message.text === 'string') {
           const delta = message.text;
           setMessages((previous) => {
             const index = previous.findIndex((item) => item.id === message.command_id);
@@ -125,7 +136,7 @@ function WebSocketHandler({ children }: { children: React.ReactNode }) {
         }
         break;
       case 'chat.finished':
-        if (relayTurn.current === message.command_id) {
+        if (useChatRun.getState().finish(message.command_id)) {
           relayTurn.current = undefined;
           externalState.finish(message.status, Date.now());
           setAiState('idle');
@@ -265,7 +276,7 @@ function WebSocketHandler({ children }: { children: React.ReactNode }) {
         }
         break;
       case 'error':
-        if (!relayTurn.current) setAiState('idle');
+        if (!relayTurn.current) { useChatRun.getState().reset(); setAiState('idle'); }
         toaster.create({
           title: message.message,
           type: 'error',
@@ -361,7 +372,7 @@ function WebSocketHandler({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const stateSubscription = wsService.onStateChange((state) => {
       setWsState(state);
-      if (state === 'CLOSED') { cyreneRef.current.reset(); relayTurn.current = undefined; setAiState('idle'); }
+      if (state === 'CLOSED') { cyreneRef.current.reset(); useChatRun.getState().reset(); relayTurn.current = undefined; setAiState('idle'); }
     });
     const messageSubscription = wsService.onMessage(handleWebSocketMessage);
     return () => {

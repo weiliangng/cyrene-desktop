@@ -3,13 +3,15 @@ import { useAiState } from '@/context/ai-state-context';
 import { ModelInfo } from '@/context/live2d-config-context';
 import { usePetActivity } from './use-pet-activity';
 import { externalState } from './external-control';
+import { useChatRun } from './chat-run';
 
 export function useCyreneIdle(modelInfo?: ModelInfo) {
   const { aiState } = useAiState();
+  const { phase } = useChatRun();
   const { sleeping, setActivity, tick } = usePetActivity();
   const previous = useRef<{ model: unknown; expression: string }>();
   const isCyrene = modelInfo?.name === 'cyrene';
-  const busy = aiState === 'thinking-speaking' || aiState === 'listening' || aiState === 'waiting';
+  const busy = phase !== 'idle' || aiState === 'thinking-speaking' || aiState === 'listening' || aiState === 'waiting';
 
   useEffect(() => {
     setActivity('conversation', isCyrene && busy);

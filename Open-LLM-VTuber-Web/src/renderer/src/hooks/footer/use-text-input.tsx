@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useWebSocket } from '@/context/websocket-context';
 import { useAiState } from '@/context/ai-state-context';
 import { useDraft } from '@/pet/draft';
+import { useChatRun } from '@/pet/chat-run';
 
 export function useTextInput() {
   const { text: inputText, setText, addPaths } = useDraft();
@@ -15,9 +16,11 @@ export function useTextInput() {
     if (paths?.length) addPaths(paths);
   };
   const handleSend = async () => {
-    if (!inputText.trim() || wsContext.wsState !== 'OPEN' || aiState === 'thinking-speaking') return;
+    if (!inputText.trim() || wsContext.wsState !== 'OPEN' || aiState === 'thinking-speaking' || useChatRun.getState().phase !== 'idle') return;
     // Forward exactly what the user sees, including whitespace and explicitly added paths.
-    wsContext.sendMessage({ type: 'text-input', text: inputText });
+    const id = crypto.randomUUID();
+    useChatRun.getState().start(id);
+    wsContext.sendMessage({ type: 'text-input', text: inputText, cyrene_command_id: id });
     setAiState('thinking-speaking');
     // Keep the draft until the backend acknowledges it; disconnects cannot eat unsent text.
   };

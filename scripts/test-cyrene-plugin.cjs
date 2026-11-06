@@ -14,7 +14,7 @@ plugin.register({ pluginConfig:{tokenFile:'ignored'},registerTool(){},on:(name,f
   const ctx={agentId:'cyrene',sessionKey:'test-session',runId:'test-run'};
   await hooks.before_agent_run({},ctx);
   await hooks.before_tool_call({toolName:'read'},ctx);
-  await hooks.agent_end({success:false,error:'HTTP client disconnected'},ctx);
+  await hooks.agent_end({success:false,error:{message:'HTTP client disconnected',name:'ClientDisconnectError'}},ctx);
   assert.deepEqual(requests.map(r=>r.name),['task.start','task.progress','task.end']);
   assert.equal(requests[1].data.label,'Using read');
   assert.equal(requests[2].data.status,'cancelled');

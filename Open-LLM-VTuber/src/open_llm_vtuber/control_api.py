@@ -69,6 +69,7 @@ class ControlHub:
         self.bus = EventBus()
         self.jobs = {}
         self.conversations = {}
+        self.cancelled_runs = OrderedDict()
         self.tts_slots = asyncio.Semaphore(2)
         root = Path(__file__).resolve().parents[3]
         self.state_dir = Path(state_dir or root / 'tmp' / 'cyrene-control')
@@ -82,6 +83,23 @@ class ControlHub:
         self.expression = None
         self.command_lock = asyncio.Lock()
         self.sweeper = None
+
+    async def cancel_run_tasks(self, uid, run_id=None, session_key=None):
+        # Canonicalize cancellation before network cleanup. Late framework hooks cannot
+        # resurrect this run, and unrelated sessions retain their own activity holds.
+        matches = [task for task in self.tasks.values() if task['status'] == 'running' and
+                   ((run_id and task['task_id'] == 'openclaw:' + run_id) or
+                    (session_key and task.get('session_key') == session_key))]
+        if run_id: self.cancelled_runs[run_id] = True
+        for task in matches:
+            rid = task.get('run_id') or task['task_id'].removeprefix('openclaw:')
+            self.cancelled_runs[rid] = True
+            task.update(status='cancelled', label='Cancelled', updated_at=time.time())
+        while len(self.cancelled_runs) > 256: self.cancelled_runs.popitem(last=False)
+        for task in matches:
+            await self.send(uid, {'type': 'cyrene-command', 'name': 'task.end',
+                'command_id': 'cancel:' + task['task_id'], 'data': dict(task)})
+            await self.bus.emit('task.cancelled', dict(task), client_id=uid)
 
     async def start(self):
         async def sweep():
@@ -229,6 +247,10 @@ class ControlHub:
             if previous['fingerprint'] != fingerprint:
                 raise HTTPException(409, 'request_id was already used for a different command')
             return dict(previous['receipt'], duplicate=True)
+        rid = command.data.get('run_id') or str(command.data.get('task_id', '')).removeprefix('openclaw:')
+        if command.name.startswith('task.') and rid in self.cancelled_runs:
+            return {'command_id': request_id, 'name': command.name, 'status': 'ignored',
+                    'reason': 'Run was cancelled', 'delivered': False}
         self.validate(command)
         uid = self.active_client(command.client_id)
         name, data = command.name, dict(command.data)

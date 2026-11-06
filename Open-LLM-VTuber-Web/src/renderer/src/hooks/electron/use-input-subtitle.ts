@@ -1,6 +1,5 @@
 import { ChangeEvent, KeyboardEvent } from 'react';
 import { useChatHistory } from '@/context/chat-history-context';
-import { useVAD } from '@/context/vad-context';
 import { useMicToggle } from '@/hooks/utils/use-mic-toggle';
 import { useTextInput } from '@/hooks/footer/use-text-input';
 import { useAiState, AiStateEnum } from '@/context/ai-state-context';
@@ -19,7 +18,6 @@ export function useInputSubtitle() {
   } = useTextInput();
 
   const { messages } = useChatHistory();
-  const { startMic, autoStartMicOn } = useVAD();
   const { handleMicToggle, micOn } = useMicToggle();
   const { aiState, setAiState } = useAiState();
   const { interrupt } = useInterrupt();
@@ -33,9 +31,6 @@ export function useInputSubtitle() {
 
   const handleInterrupt = () => {
     interrupt();
-    if (autoStartMicOn) {
-      startMic();
-    }
   };
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {

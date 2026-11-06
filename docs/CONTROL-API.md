@@ -95,6 +95,12 @@ Events contain `id`, `type`, Unix `time`, `data`, and applicable `client_id`, `c
 
 External events are **not** fed back into OpenClaw automatically; `invoke_agent` is explicit to prevent event loops. A busy conversation returns 409 for another input; callers should queue or interrupt deliberately. No keylogging, browser click interception, or global screen monitoring is installed.
 
+## Stop acknowledgements
+
+Stop is repeatable, including before `chat.started` and after the local chat state changes. The UI displays `Stopping…`, keeps the pet awake and blocks new submissions until `chat.finished` or `chat.stopped` acknowledges cancellation. The backend emits `chat.stopping` before closing the upstream stream; if cleanup takes longer than three seconds it emits `chat.stop-pending` so Stop can be retried without blocking the WebSocket loop.
+
+Framework tasks carry `run_id` and `session_key`. Cancelling a UI turn ends its matching task holds while preserving other sessions. A bounded set of cancelled run IDs prevents late task start/progress/end hooks from restoring `Thinking` or converting cancellation into failure. Frontend turn IDs likewise reject stale start/completion events. A synchronous AI-state ref prevents typing timers and stale React callbacks from overwriting a newly active conversation.
+
 ## Application-owned sleep and expressions
 
 `pet.wake` and `pet.sleep` are no longer accepted commands, and `sleep` is reserved for the app. Hover, focus, an unsent draft, a running conversation/task, explicit notification display and playback hold the pet awake. After those holds end it returns to sleep after five seconds.

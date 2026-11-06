@@ -17,6 +17,7 @@ import { useDraggable } from '@/hooks/electron/use-draggable';
 import { inputSubtitleStyles } from './electron-style';
 import { useMode } from '@/context/mode-context';
 import { usePetActivity } from '@/pet/use-pet-activity';
+import { useChatRun } from '@/pet/chat-run';
 import { heldKeys } from '@/pet/cyrene-runtime';
 import { useExternalControl, externalState } from '@/pet/external-control';
 import { emitControlEvent } from '@/pet/use-cyrene-control';
@@ -42,6 +43,7 @@ export function InputSubtitle() {
   const isPet = mode === 'pet';
   const { sleeping, setActivity } = usePetActivity();
   const { caption, taskLabel } = useExternalControl();
+  const { phase } = useChatRun();
   const expanded = !isPet || !sleeping;
 
   const {
@@ -157,8 +159,8 @@ export function InputSubtitle() {
           <Flex align="center" justify="space-between" color="#887496" pr="4">
             <Flex align="center" gap="2">
               <LuBell size={16} />
-              <Text {...inputSubtitleStyles.statusText}>
-                {taskLabel || (aiState === 'idle' ? 'Cyrene' : aiState)}
+              <Text data-testid="cyrene-status" {...inputSubtitleStyles.statusText}>
+                {phase === 'stopping' ? 'Stopping…' : taskLabel || (phase === 'running' ? 'Thinking' : aiState === 'idle' ? 'Cyrene' : aiState)}
               </Text>
             </Flex>
 
@@ -214,7 +216,7 @@ export function InputSubtitle() {
             />
             <Button
               onClick={handleSend}
-              disabled={aiState === 'thinking-speaking' || !inputValue.trim()}
+              disabled={phase !== 'idle' || aiState === 'thinking-speaking' || !inputValue.trim()}
               {...inputSubtitleStyles.sendButton}
             >
               <LuSend size={16} />

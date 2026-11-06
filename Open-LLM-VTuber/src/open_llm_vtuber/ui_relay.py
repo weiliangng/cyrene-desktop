@@ -31,6 +31,7 @@ class UIRelay:
         self.handler = handler
         self.transport = transport  # Injectable transport for real streaming/cancellation tests.
         self.turns = {}
+        self.run_ids = {}
 
     def settings(self, uid):
         return self.handler.client_contexts[uid].character_config.agent_config.llm_configs.openai_compatible_llm
@@ -85,13 +86,24 @@ class UIRelay:
         self.handler.current_conversation_tasks[uid] = task
 
     async def interrupt(self, uid):
+        turn_id = self.turns.get(uid)
         task = self.handler.current_conversation_tasks.get(uid)
+        with contextlib.suppress(Exception):
+            await self.send(uid, {'type': 'chat.stopping', 'command_id': turn_id})
+        hub = self.handler.control_hub
+        if hub:
+            await hub.cancel_run_tasks(uid, self.run_ids.get(uid), self.session_key(uid))
         if task and not task.done():
-            # Closing the streaming HTTP response triggers the gateway's client-disconnect
-            # AbortController, cancelling the actual agent run, not just hiding its reply.
+            # Closing the HTTP stream aborts the actual gateway run.
             task.cancel()
-            with contextlib.suppress(asyncio.CancelledError):
-                await task
+            done, _ = await asyncio.wait({task}, timeout=3)
+            if not done:
+                await self.send(uid, {'type': 'chat.stop-pending', 'command_id': turn_id})
+                return
+        if self.turns.get(uid) == turn_id:
+            self.turns.pop(uid, None)
+        with contextlib.suppress(Exception):
+            await self.send(uid, {'type': 'chat.stopped', 'command_id': turn_id, 'status': 'cancelled'})
 
     async def run(self, uid, text, turn_id, history_uid, session_key):
         context = self.handler.client_contexts[uid]
@@ -119,6 +131,7 @@ class UIRelay:
                                 finished = True
                                 break
                             chunk = json.loads(event)
+                            if isinstance(chunk.get('id'), str): self.run_ids[uid] = chunk['id']
                             if chunk.get('error'):
                                 raise RuntimeError('OpenClaw reported an error during the response')
                             for choice in chunk.get('choices', []):
@@ -136,6 +149,8 @@ class UIRelay:
         except Exception as exc:
             status, error = 'failed', str(exc) or type(exc).__name__
         finally:
+            if status == 'cancelled' and self.handler.control_hub:
+                await self.handler.control_hub.cancel_run_tasks(uid, self.run_ids.get(uid), session_key)
             if result:
                 try:
                     store_message(context.character_config.conf_uid, history_uid, 'ai', result,
@@ -149,6 +164,7 @@ class UIRelay:
                 await self.emit(uid, 'output.completed', {'text': result, 'status': status, 'error': error}, turn_id)
             if self.turns.get(uid) == turn_id:
                 self.turns.pop(uid, None)
+            self.run_ids.pop(uid, None)
             hub = self.handler.control_hub
             if hub and hub.conversations.get(uid) == turn_id:
                 hub.conversations.pop(uid, None)

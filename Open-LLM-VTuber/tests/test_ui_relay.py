@@ -97,6 +97,16 @@ class RelayTests(unittest.IsolatedAsyncioTestCase):
         await self.send('can send again')
         self.assertEqual(self.socket.messages[-1]['status'], 'completed')
 
+    async def test_stop_before_start_and_repeated_stop_are_acknowledged(self):
+        await self.relay.submit('pet', {'type':'text-input','text':'hello'})
+        await self.relay.interrupt('pet')
+        await self.relay.interrupt('pet')
+        self.assertEqual(self.socket.messages[-1]['type'], 'chat.stopped')
+        self.assertFalse(self.relay.turns)
+        self.stream = Stream(['data: [DONE]\n\n'])
+        await self.send('next')
+        self.assertEqual(self.socket.messages[-1]['status'], 'completed')
+
     async def test_unfinished_stream_is_failure_not_success(self):
         self.stream = Stream([delta('partial')])
         await self.send('hello')

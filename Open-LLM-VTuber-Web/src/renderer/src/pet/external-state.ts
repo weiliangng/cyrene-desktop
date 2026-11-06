@@ -16,6 +16,7 @@ export class ExternalState {
 
   task(task: ExternalTask, now = Date.now(), restoring = false) {
     const previous = this.tasks.get(task.task_id);
+    if (!restoring && task.task_id.startsWith('openclaw:') && previous && previous.status !== 'running' && task.status === 'running') return;
     this.tasks.set(task.task_id, task);
     if (!restoring && task.status === 'running' && previous?.status !== 'running') {
       this.expression = null;

@@ -44,3 +44,22 @@ assert.equal(appendFilePaths('  keep text  ', [file, file]), '  keep text  \n' +
 assert.equal(appendFilePaths('', []), '');
 assert.equal(appendFilePaths('draft\n', [file]), 'draft\n' + JSON.stringify(file));
 console.log('Application sleep/task/expression priority, expiry, concurrency and visible file paths passed.');
+
+const { useChatRun } = load('../src/renderer/src/pet/chat-run.ts');
+const run = () => useChatRun.getState();
+run().start('a'); run().stop(); run().stop();
+assert.equal(run().phase, 'stopping', 'repeated Stop remains active');
+assert.equal(run().start('a'), true);
+assert.equal(run().phase, 'stopping', 'late start acknowledgement cannot restore Thinking');
+assert.equal(run().finish('a'), true);
+run().start('b');
+assert.equal(run().finish('a'), false, 'old completion cannot clear a new run');
+assert.equal(run().stop('a'), false, 'old stopping event cannot affect the new run');
+assert.equal(run().start('a'), false, 'cancelled run cannot restart from a stale event');
+assert.equal(run().phase, 'running');
+run().stop(); run().finish('b');
+assert.equal(run().phase, 'idle');
+state.task({ task_id:'openclaw:retired',status:'cancelled',expires_at:100 },3000);
+state.task({ task_id:'openclaw:retired',status:'running',expires_at:100 },3001);
+assert.equal(state.tasks.get('openclaw:retired').status,'cancelled');
+console.log('Stop acknowledgement, rapid repeated clicks and stale run/task event protection passed.');

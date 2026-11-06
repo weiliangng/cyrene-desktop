@@ -1,5 +1,4 @@
 import { ChangeEvent, KeyboardEvent } from 'react';
-import { useVAD } from '@/context/vad-context';
 import { useTextInput } from '@/hooks/footer/use-text-input';
 import { useInterrupt } from '@/hooks/utils/use-interrupt';
 import { useMicToggle } from '@/hooks/utils/use-mic-toggle';
@@ -16,9 +15,8 @@ export const useFooter = () => {
   } = useTextInput();
 
   const { interrupt } = useInterrupt();
-  const { startMic, autoStartMicOn } = useVAD();
   const { handleMicToggle, micOn } = useMicToggle();
-  const { setAiState, aiState } = useAiState();
+  const { setAiState } = useAiState();
 
   const handleInputChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     handleChange({ target: { value: e.target.value } } as ChangeEvent<HTMLInputElement>);
@@ -30,12 +28,7 @@ export const useFooter = () => {
   };
 
   const handleInterrupt = () => {
-    if (aiState === AiStateEnum.THINKING_SPEAKING) {
-      interrupt();
-      if (autoStartMicOn) {
-        startMic();
-      }
-    }
+    interrupt();
   };
 
   return {

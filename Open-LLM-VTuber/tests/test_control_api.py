@@ -32,6 +32,23 @@ class ControlTests(unittest.IsolatedAsyncioTestCase):
     async def send(self, name, data, request_id=None):
         return await self.hub.command(ControlCommand(name=name, data=data, request_id=request_id))
 
+    async def test_cancelled_run_cannot_restore_thinking_or_override_unrelated_task(self):
+        await self.send('task.start', {'task_id':'openclaw:run-a', 'run_id':'run-a', 'session_key':'thread-a', 'label':'Thinking'})
+        await self.send('task.start', {'task_id':'openclaw:run-b', 'run_id':'run-b', 'session_key':'thread-b'})
+        await self.hub.cancel_run_tasks('pet', 'run-a', 'thread-a')
+        self.assertEqual(self.hub.tasks['openclaw:run-a']['status'], 'cancelled')
+        self.assertEqual(self.hub.tasks['openclaw:run-b']['status'], 'running')
+        for name in ['task.start', 'task.progress', 'task.end']:
+            receipt = await self.send(name, {'task_id':'openclaw:run-a','label':'Thinking','status':'failed'})
+            self.assertEqual(receipt['status'], 'ignored')
+        self.assertEqual(self.hub.tasks['openclaw:run-a']['status'], 'cancelled')
+
+    async def test_cancellation_before_task_hook_arrives(self):
+        await self.hub.cancel_run_tasks('pet', 'late-run', 'thread-a')
+        receipt = await self.send('task.start', {'task_id':'openclaw:late-run','session_key':'thread-a','label':'Thinking'})
+        self.assertEqual(receipt['status'], 'ignored')
+        self.assertNotIn('openclaw:late-run', self.hub.tasks)
+
     async def test_targets_real_session_and_retries_once(self):
         first, second = await asyncio.gather(self.send('input.submit', {'text':'hello'}, 'same'), self.send('input.submit', {'text':'hello'}, 'same'))
         self.assertEqual(len(self.handler.inputs), 1)

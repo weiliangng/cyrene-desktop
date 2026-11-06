@@ -51,7 +51,7 @@ export default definePluginEntry({
       const key = ctx.sessionKey ?? ctx.sessionId ?? id;
       tasks.set(key, id);
       if (ctx.runId) runs.set(ctx.runId, id);
-      await safe(() => command('task.start', { task_id: id, label: 'Thinking', timeout_ms: 300000 }, `${id}:start`));
+      await safe(() => command('task.start', { task_id: id, run_id: ctx.runId, session_key: ctx.sessionKey, label: 'Thinking', timeout_ms: 300000 }, `${id}:start`));
     });
     api.on('before_tool_call', async (event, ctx) => {
       if (!scope(ctx)) return;
@@ -64,7 +64,7 @@ export default definePluginEntry({
       const id = runs.get(event.runId ?? ctx.runId) ?? tasks.get(key);
       if (!id) return;
       tasks.delete(key); runs.delete(event.runId ?? ctx.runId);
-      const status = /abort|cancel|client disconnected/i.test(String(event.error ?? '')) ? 'cancelled' : event.success === false ? 'failed' : 'completed';
+      const status = /abort|cancel|client disconnected/i.test(JSON.stringify(event.error ?? event.abortReason ?? '')) ? 'cancelled' : event.success === false ? 'failed' : 'completed';
       await safe(() => command('task.end', { task_id: id, status, label: status === 'cancelled' ? 'Cancelled' : status === 'failed' ? 'Task failed' : 'Done' }, `${id}:end`));
     });
   },
