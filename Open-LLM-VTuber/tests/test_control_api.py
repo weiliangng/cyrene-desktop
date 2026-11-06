@@ -50,7 +50,7 @@ class ControlTests(unittest.IsolatedAsyncioTestCase):
         with self.assertRaises(HTTPException): await self.send('pet.sleep', {})
         with self.assertRaises(HTTPException): await self.send('task.progress', {'task_id':'one'})
         await self.send('task.end', {'task_id':'two'})
-        await self.send('pet.sleep', {})
+        with self.assertRaises(HTTPException): await self.send('pet.sleep', {})
         self.assertIn('task.failed', [e['type'] for e in self.hub.bus.events])
 
     async def test_capacity_failure_does_not_mutate(self):
@@ -107,7 +107,7 @@ class ControlTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(batch['cursor'], self.hub.bus.sequence)
 
     async def test_validation(self):
-        for name, data in [('expression.set', {'name':'unknown'}),('task.start',{'task_id':'x','timeout_ms':'bad'}),
+        for name, data in [('expression.set', {'name':'sleep'}),('expression.set', {'name':'unknown'}),('pet.wake', {}),('task.start',{'task_id':'x','timeout_ms':'bad'}),
             ('task.start',{'task_id':'x','label':{}}), ('layout.set',{'matrix':[0]*16}),
             ('ui.visibility',{'visible':'true'}), ('speech.say',{'text':'hello','speak':'false'})]:
             with self.subTest(name=name, data=data):

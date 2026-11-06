@@ -238,6 +238,9 @@ class ServiceContext:
         self.send_text = send_text
         self.client_uid = client_uid
 
+        if self.system_config.ui_only:
+            return
+
         # Initialize session-specific MCP components
         await self._init_mcp_components(
             self.character_config.agent_config.agent_settings.basic_memory_agent.use_mcpp,
@@ -267,6 +270,15 @@ class ServiceContext:
 
         # init live2d from character config
         self.init_live2d(config.character_config.live2d_model_name)
+
+        if config.system_config.ui_only:
+            # This process is a presentation server, not an agent or speech listener.
+            self.asr_engine = self.vad_engine = self.agent_engine = self.translate_engine = None
+            self.system_prompt = None
+            self.init_tts(config.character_config.tts_config)
+            self.config, self.system_config, self.character_config = config, config.system_config, config.character_config
+            logger.info("Cyrene UI-only mode: OpenClaw owns prompts, sessions, tools and memory")
+            return
 
         # init asr from character config
         self.init_asr(config.character_config.asr_config)

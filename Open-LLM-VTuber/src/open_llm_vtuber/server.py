@@ -90,7 +90,7 @@ class WebSocketServer:
             allow_headers=["*"],
         )
 
-        self.ws_handler = WebSocketHandler(self.default_context_cache)
+        self.ws_handler = WebSocketHandler(self.default_context_cache, ui_only=config.system_config.ui_only)
         self.control_hub = ControlHub(self.ws_handler)
         self.ws_handler.control_hub = self.control_hub
         self.app.include_router(self.control_hub.router())

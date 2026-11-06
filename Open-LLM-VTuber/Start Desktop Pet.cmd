@@ -6,5 +6,5 @@ if errorlevel 1 (
   pause
   exit /b 1
 )
-start "" "%~dp0..\Open-LLM-VTuber-Web\release\quiet\win-unpacked\Cyrene Desktop.exe"
+start "" "%~dp0..\Open-LLM-VTuber-Web\release\interface\win-unpacked\Cyrene Desktop.exe"
 echo Cyrene starts in pet mode. Hover to wake her; she sleeps after five idle seconds.

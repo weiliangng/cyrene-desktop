@@ -13,6 +13,7 @@ export function useInputSubtitle() {
     handleKeyPress: handleKey,
     handleCompositionStart,
     handleCompositionEnd,
+    handleAttachFiles,
     handleSend,
 
   } = useTextInput();
@@ -37,12 +38,12 @@ export function useInputSubtitle() {
     }
   };
 
-  const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     handleChange({ target: { value: e.target.value } } as ChangeEvent<HTMLInputElement>);
     setAiState(AiStateEnum.WAITING);
   };
 
-  const handleKeyPress = (e: KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyPress = (e: KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     handleKey(e as any);
   };
 
@@ -54,6 +55,7 @@ export function useInputSubtitle() {
     handleCompositionEnd,
     handleInterrupt,
     handleMicToggle,
+    handleAttachFiles,
     lastAIMessage,
     hasAIMessages,
     aiState,

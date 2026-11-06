@@ -149,7 +149,8 @@ class WebSocketService {
       type: 'fetch-history-list',
     });
     this.sendMessage({
-      type: 'create-new-history',
+      type: 'resume-ui-session',
+      history_uid: localStorage.getItem('cyrene.activeHistory') || undefined,
     });
   }
 

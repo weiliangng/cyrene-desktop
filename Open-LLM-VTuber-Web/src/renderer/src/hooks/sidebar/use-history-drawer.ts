@@ -10,7 +10,6 @@ export const useHistoryDrawer = () => {
   const {
     historyList,
     currentHistoryUid,
-    setCurrentHistoryUid,
     setHistoryList,
     messages,
     updateHistoryList,
@@ -25,7 +24,6 @@ export const useHistoryDrawer = () => {
       updateHistoryList(currentHistoryUid, latestMessage);
     }
 
-    setCurrentHistoryUid(uid);
     sendMessage({
       type: 'fetch-and-set-history',
       history_uid: uid,

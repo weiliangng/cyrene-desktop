@@ -62,9 +62,11 @@ class WSMessage(TypedDict, total=False):
 class WebSocketHandler:
     """Handles WebSocket connections and message routing"""
 
-    def __init__(self, default_context_cache: ServiceContext):
+    def __init__(self, default_context_cache: ServiceContext, ui_only: bool | None = None):
         """Initialize the WebSocket handler with default context"""
         self.control_hub = None
+        from .ui_relay import UIRelay
+        self.ui_relay = UIRelay(self) if (ui_only if ui_only is not None else getattr(default_context_cache.system_config, 'ui_only', False)) else None
         self.client_connections: Dict[str, WebSocket] = {}
         self.client_contexts: Dict[str, ServiceContext] = {}
         self.chat_group_manager = ChatGroupManager()
@@ -174,8 +176,8 @@ class WebSocketHandler:
         # Send initial group status
         await self.send_group_update(websocket, client_uid)
 
-        # Start microphone
-        await websocket.send_text(json.dumps({"type": "control", "text": "start-mic"}))
+        if not self.ui_relay:
+            await websocket.send_text(json.dumps({"type": "control", "text": "start-mic"}))
 
     async def _init_service_context(
         self, send_text: Callable, client_uid: str
@@ -261,6 +263,13 @@ class WebSocketHandler:
             if msg_type == 'cyrene-event':
                 await self.control_hub.client_event(client_uid, data)
                 return
+            if self.ui_relay:
+                if msg_type == 'interrupt-signal':
+                    await self.ui_relay.interrupt(client_uid)
+                    return
+                if msg_type in ('mic-audio-data', 'mic-audio-end', 'raw-audio-data', 'ai-speak-signal', 'text-input'):
+                    await self.ui_relay.submit(client_uid, data)
+                    return
             if msg_type in ('text-input', 'mic-audio-end', 'ai-speak-signal'):
                 self.control_hub.conversations[client_uid] = data.get('cyrene_command_id') or str(uuid4())
             event_name = {'text-input': 'input.received', 'mic-audio-end': 'input.audio', 'audio-play-start': 'output.text',
@@ -272,6 +281,12 @@ class WebSocketHandler:
                     conversation_id=self.control_hub.conversations.get(client_uid))
                 if msg_type in ('frontend-playback-complete', 'interrupt-signal'):
                     self.control_hub.conversations.pop(client_uid, None)
+        if self.ui_relay and msg_type in ('resume-ui-session', 'create-new-history', 'fetch-and-set-history'):
+            await self.ui_relay.select_history(client_uid, data.get('history_uid') if msg_type != 'create-new-history' else None)
+            return
+        if msg_type == 'resume-ui-session':
+            await self._handle_create_history(websocket, client_uid, data)
+            return
         handler = self._message_handlers.get(msg_type)
         if handler:
             await handler(websocket, client_uid, data)
@@ -299,6 +314,8 @@ class WebSocketHandler:
 
     async def handle_disconnect(self, client_uid: str) -> None:
         """Handle client disconnection"""
+        if self.ui_relay:
+            await self.ui_relay.interrupt(client_uid)
         if self.control_hub:
             await self.control_hub.disconnect(client_uid)
         group = self.chat_group_manager.get_client_group(client_uid)

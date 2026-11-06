@@ -1,11 +1,11 @@
 import {
-  LuBell, LuSend, LuMic, LuMicOff, LuHand, LuX,
+  LuBell, LuSend, LuMic, LuMicOff, LuHand, LuX, LuPaperclip,
 } from 'react-icons/lu';
 import {
   Box,
   Button,
   Flex,
-  Input,
+  Textarea,
   Stack,
   Text,
   VStack,
@@ -18,7 +18,7 @@ import { inputSubtitleStyles } from './electron-style';
 import { useMode } from '@/context/mode-context';
 import { usePetActivity } from '@/pet/use-pet-activity';
 import { heldKeys } from '@/pet/cyrene-runtime';
-import { useExternalControl } from '@/pet/external-control';
+import { useExternalControl, externalState } from '@/pet/external-control';
 import { emitControlEvent } from '@/pet/use-cyrene-control';
 
 export function InputSubtitle() {
@@ -31,6 +31,7 @@ export function InputSubtitle() {
     handleInterrupt,
     handleMicToggle,
     handleSend,
+    handleAttachFiles,
     lastAIMessage,
     hasAIMessages,
     aiState,
@@ -167,13 +168,12 @@ export function InputSubtitle() {
                 defaultValue=""
                 style={{ width: 90, background: 'transparent', color: '#806994', fontSize: 12, border: 0 }}
                 onChange={(event) => {
-                  const adapter = (window as any).getLAppAdapter?.();
-                  adapter?.setExpression(event.target.value);
+                  externalState.setExpression(event.target.value, 5000, Date.now());
                   event.target.value = '';
                 }}
               >
                 <option value="" disabled>Expression</option>
-                {['neutral', 'happy', 'playful', 'blush', 'star_eyes', 'cry', 'hurt', 'angry', 'sweat', 'confused', 'sleep'].map((name) => <option key={name} value={name}>{name.replace('_', ' ')}</option>)}
+                {['neutral', 'happy', 'playful', 'blush', 'star_eyes', 'cry', 'hurt', 'angry', 'sweat', 'confused', 'wink'].map((name) => <option key={name} value={name}>{name.replace('_', ' ')}</option>)}
               </select>
               <IconButton
                 aria-label={(window.api as any)?.getMicrophoneEnabled?.() === false ? "Microphone disabled" : "Toggle microphone"}
@@ -196,7 +196,9 @@ export function InputSubtitle() {
 
         <Box {...inputSubtitleStyles.inputBox}>
           <Stack direction="row" gap="2" p="2">
-            <Input
+            <IconButton aria-label="Attach file paths" onClick={handleAttachFiles} {...inputSubtitleStyles.iconButton}><LuPaperclip size={16} /></IconButton>
+            <Textarea
+              rows={2}
               value={inputValue}
               onChange={handleInputChange}
               onKeyDown={(event) => { heldKeys.add(event.key.toLowerCase()); handleKeyPress(event); }}
@@ -207,9 +209,12 @@ export function InputSubtitle() {
               onCompositionEnd={handleCompositionEnd}
               placeholder="Say something to Cyrene..."
               {...inputSubtitleStyles.input}
+              minH="64px"
+              resize="vertical"
             />
             <Button
               onClick={handleSend}
+              disabled={aiState === 'thinking-speaking' || !inputValue.trim()}
               {...inputSubtitleStyles.sendButton}
             >
               <LuSend size={16} />

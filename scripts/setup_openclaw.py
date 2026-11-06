@@ -66,6 +66,7 @@ def configure(connect=False):
         backup = STATE / 'conf.before-openclaw.yaml'
         if not backup.exists(): backup.write_bytes(conf_path.read_bytes())
         conf = yaml.load(conf_path)
+        conf['system_config']['ui_only'] = True
         agent = conf['character_config']['agent_config']
         agent['agent_settings']['basic_memory_agent']['llm_provider'] = 'openai_compatible_llm'
         agent['agent_settings']['basic_memory_agent']['use_mcpp'] = False

@@ -10,11 +10,11 @@ After a reboot, OpenClaw may need to recover interrupted sessions. The launcher 
 
 Spoken replies are disabled (`character_config.tts_config.speech_enabled: false` in the local config). Replies and notifications remain text, expressions remain active, and independent sound cues are available.
 
-Desktop microphone capture is disabled in `tmp/cyrene-desktop-state/media-preferences.json`. Automatic microphone activation is also switched off. Set `microphoneEnabled` to `true` in that file and restart to allow microphone use again.
+Desktop microphone capture is disabled in `tmp/cyrene-desktop-state/media-preferences.json`. Automatic microphone activation is also switched off. Presentation-only mode also rejects microphone/ASR input on the backend.
 
 Right-click Cyrene or the tray icon to change modes, toggle input visibility or mouse passthrough, and exit. The original watermark-hiding preset and the heart-layer corrections remain applied. The original model ZIP is unchanged.
 
-OpenClaw is available as a pinned, project-local runtime with a Cyrene plugin. **Start Cyrene with OpenClaw.cmd** configures chat through OpenClaw and SoCLaaS (`SOCLAAS_API_KEY` in the launch environment). A token-protected local control API and MCP adapter expose event input/output, expressions, speech/subtitles, task lifecycles, wake/sleep, visibility, layout and interruption. See [external connections and examples](docs/CONTROL-API.md). The committed preview configuration remains a credential-free starting point.
+OpenClaw is available as a pinned, project-local runtime with a Cyrene plugin. **Start Cyrene with OpenClaw.cmd** configures chat through OpenClaw and SoCLaaS (`SOCLAAS_API_KEY` in the launch environment). A token-protected local control API and MCP adapter expose event input/output, expressions, speech/subtitles, task lifecycles, visibility, layout and interruption. See [external connections and examples](docs/CONTROL-API.md). The desktop forwards chat verbatim; OpenClaw owns prompts, memory and tools. Sleep and task reactions belong to the app. Drop files or use the paperclip to add reviewable paths to the draft. The committed preview configuration remains a credential-free starting point.
 
 ## First setup after cloning
 

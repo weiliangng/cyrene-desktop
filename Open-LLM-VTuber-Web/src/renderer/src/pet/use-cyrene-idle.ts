@@ -25,8 +25,8 @@ export function useCyreneIdle(modelInfo?: ModelInfo) {
       const model = adapter?.getModel();
       if (!model?._model || adapter.getExpressionCount() < 1) return;
       externalState.tick(Date.now());
-      const expression = externalState.expression?.name || (sleeping ? 'sleep' : 'neutral');
-      // Do not overwrite speech-driven emotions on every frame.
+      const expression = externalState.resolveExpression(usePetActivity.getState().sleeping, Date.now());
+      // The app is the final authority: sleep and task transitions override agent emotions.
       if (previous.current?.model !== model || previous.current?.expression !== expression) {
         adapter.setExpression(expression);
         previous.current = { model, expression };

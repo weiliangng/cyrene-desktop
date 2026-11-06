@@ -3,7 +3,7 @@ import json
 from uuid import uuid4
 import numpy as np
 from datetime import datetime
-from fastapi import APIRouter, WebSocket, UploadFile, File, Response
+from fastapi import APIRouter, WebSocket, UploadFile, File, Response, HTTPException
 from starlette.responses import JSONResponse
 from starlette.websockets import WebSocketDisconnect
 from loguru import logger
@@ -143,6 +143,8 @@ def init_webtool_routes(default_context_cache: ServiceContext) -> APIRouter:
         """
         Endpoint for transcribing audio using the ASR engine
         """
+        if default_context_cache.system_config.ui_only:
+            raise HTTPException(status_code=409, detail="Microphone/ASR input is disabled in presentation-only mode")
         logger.info(f"Received audio file for transcription: {file.filename}")
 
         try:

@@ -22,10 +22,13 @@ import { useGroup } from '@/context/group-context';
 import { useInterrupt } from '@/hooks/utils/use-interrupt';
 import { useBrowser } from '@/context/browser-context';
 import { useCyreneControl, cancelExternalSpeech } from '@/pet/use-cyrene-control';
+import { useDraft } from '@/pet/draft';
+import { externalState } from '@/pet/external-control';
 
 function WebSocketHandler({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation();
   const [wsState, setWsState] = useState<string>('CLOSED');
+  const relayTurn = useRef<string>();
   const [wsUrl, setWsUrl] = useLocalStorage<string>('wsUrl', defaultWsUrl);
   const [baseUrl, setBaseUrl] = useLocalStorage<string>('baseUrl', defaultBaseUrl);
   const { aiState, setAiState, backendSynthComplete, setBackendSynthComplete } = useAiState();
@@ -100,6 +103,35 @@ function WebSocketHandler({ children }: { children: React.ReactNode }) {
   const handleWebSocketMessage = useCallback((message: MessageEvent) => {
     console.log('Received message from server:', message);
     switch (message.type) {
+      case 'chat.started':
+        relayTurn.current = message.command_id;
+        if (typeof message.text === 'string') {
+          const text = message.text;
+          const id = `${message.command_id}:user`;
+          setMessages((previous) => previous.some((item) => item.id === id) ? previous : [...previous, { id, role: 'human', type: 'text', content: text, timestamp: new Date().toISOString() }]);
+          if (useDraft.getState().text === text) useDraft.getState().setText('');
+        }
+        clearResponse();
+        setAiState('thinking-speaking');
+        break;
+      case 'chat.delta':
+        if (relayTurn.current === message.command_id && typeof message.text === 'string') {
+          const delta = message.text;
+          setMessages((previous) => {
+            const index = previous.findIndex((item) => item.id === message.command_id);
+            if (index < 0) return [...previous, { id: message.command_id!, role: 'ai', type: 'text', content: delta, timestamp: new Date().toISOString() }];
+            return previous.map((item, i) => i === index ? { ...item, content: item.content + delta } : item);
+          });
+        }
+        break;
+      case 'chat.finished':
+        if (relayTurn.current === message.command_id) {
+          relayTurn.current = undefined;
+          externalState.finish(message.status, Date.now());
+          setAiState('idle');
+          if (message.status === 'failed') toaster.create({ title: message.message || 'OpenClaw request failed', type: 'error', duration: 6000 });
+        }
+        break;
       case 'cyrene-command': void cyreneRef.current.handle(message); break;
       case 'cyrene-state': cyreneRef.current.snapshot(message.state); break;
       case 'control':
@@ -178,8 +210,9 @@ function WebSocketHandler({ children }: { children: React.ReactNode }) {
         }
         break;
       case 'history-data':
+        if (message.history_uid) { localStorage.setItem('cyrene.activeHistory', message.history_uid); setCurrentHistoryUid(message.history_uid); }
         if (message.messages) {
-          setMessages(message.messages);
+          setMessages(message.messages.map((item, i) => ({ ...item, id: item.id || `${message.history_uid}:${i}`, type: item.type || 'text' })));
         }
         toaster.create({
           title: t('notification.historyLoaded'),
@@ -192,6 +225,7 @@ function WebSocketHandler({ children }: { children: React.ReactNode }) {
         setSubtitleText(t('notification.newConversation'));
         // No need to open mic here
         if (message.history_uid) {
+          localStorage.setItem('cyrene.activeHistory', message.history_uid);
           setCurrentHistoryUid(message.history_uid);
           setMessages([]);
           const newHistory: HistoryInfo = {
@@ -231,6 +265,7 @@ function WebSocketHandler({ children }: { children: React.ReactNode }) {
         }
         break;
       case 'error':
+        if (!relayTurn.current) setAiState('idle');
         toaster.create({
           title: message.message,
           type: 'error',
@@ -302,13 +337,31 @@ function WebSocketHandler({ children }: { children: React.ReactNode }) {
   }, [aiState, addAudioTask, appendHumanMessage, baseUrl, bgUrlContext, setAiState, setConfName, setConfUid, setConfigFiles, setCurrentHistoryUid, setHistoryList, setMessages, setModelInfo, setSubtitleText, startMic, stopMic, setSelfUid, setGroupMembers, setIsOwner, backendSynthComplete, setBackendSynthComplete, clearResponse, handleControlMessage, appendOrUpdateToolCallMessage, interrupt, setBrowserViewData, t]);
 
   useEffect(() => {
+    const drag = (event: DragEvent) => {
+      if (event.dataTransfer?.types.includes('Files')) event.preventDefault();
+    };
+    const drop = (event: DragEvent) => {
+      if (!event.dataTransfer?.files.length) return;
+      event.preventDefault();
+      const paths = Array.from(event.dataTransfer.files).map((file) => (window.api as any)?.getPathForFile?.(file)).filter(Boolean);
+      if (paths.length) {
+        useDraft.getState().addPaths(paths);
+        (window as any).inputSubtitle?.open?.();
+      } else toaster.create({ title: 'Local file paths require the desktop app', type: 'error' });
+    };
+    window.addEventListener('dragover', drag);
+    window.addEventListener('drop', drop);
+    return () => { window.removeEventListener('dragover', drag); window.removeEventListener('drop', drop); };
+  }, []);
+
+  useEffect(() => {
     wsService.connect(wsUrl);
   }, [wsUrl]);
 
   useEffect(() => {
     const stateSubscription = wsService.onStateChange((state) => {
       setWsState(state);
-      if (state === 'CLOSED') cyreneRef.current.reset();
+      if (state === 'CLOSED') { cyreneRef.current.reset(); relayTurn.current = undefined; setAiState('idle'); }
     });
     const messageSubscription = wsService.onMessage(handleWebSocketMessage);
     return () => {

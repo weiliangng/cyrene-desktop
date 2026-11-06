@@ -35,6 +35,7 @@ interface MessageInputProps {
   onKeyDown: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void
   onCompositionStart: () => void
   onCompositionEnd: () => void
+  onAttachFiles: () => void
 }
 
 // Reusable components
@@ -81,6 +82,7 @@ const MessageInput = memo(({
   onKeyDown,
   onCompositionStart,
   onCompositionEnd,
+  onAttachFiles,
 }: MessageInputProps) => {
   const { t } = useTranslation();
 
@@ -88,7 +90,8 @@ const MessageInput = memo(({
     <InputGroup flex={1}>
       <Box position="relative" width="100%">
         <IconButton
-          aria-label="Attach file"
+          aria-label="Attach file paths"
+          onClick={onAttachFiles}
           variant="ghost"
           {...footerStyles.footer.attachButton}
         >
@@ -120,6 +123,7 @@ function Footer({ isCollapsed = false, onToggle }: FooterProps): JSX.Element {
     handleCompositionEnd,
     handleInterrupt,
     handleMicToggle,
+    handleAttachFiles,
     micOn,
   } = useFooter();
 
@@ -146,6 +150,7 @@ function Footer({ isCollapsed = false, onToggle }: FooterProps): JSX.Element {
             onKeyDown={handleKeyPress}
             onCompositionStart={handleCompositionStart}
             onCompositionEnd={handleCompositionEnd}
+            onAttachFiles={handleAttachFiles}
           />
         </HStack>
       </Box>

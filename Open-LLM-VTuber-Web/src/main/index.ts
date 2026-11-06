@@ -1,5 +1,5 @@
 /* eslint-disable no-shadow */
-import { app, ipcMain, globalShortcut, desktopCapturer, protocol, net, session } from "electron";
+import { app, ipcMain, globalShortcut, desktopCapturer, protocol, net, session, dialog } from "electron";
 import { join, resolve, relative, isAbsolute } from 'path';
 import { pathToFileURL } from 'url';
 import { appendFileSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
@@ -38,6 +38,12 @@ protocol.registerSchemesAsPrivileged([{
 
 let lastLayoutJson = '';
 function setupIPC(): void {
+  ipcMain.handle('cyrene-pick-files', async (event) => {
+    const window = windowManager.getWindow();
+    if (!window || event.sender !== window.webContents) throw new Error('Invalid file picker request');
+    const result = await dialog.showOpenDialog(window, { properties: ['openFile', 'multiSelections'] });
+    return result.canceled ? [] : result.filePaths;
+  });
   ipcMain.on('cyrene-microphone-enabled', (event) => {
     event.returnValue = event.sender === windowManager.getWindow()?.webContents && microphoneEnabled;
   });

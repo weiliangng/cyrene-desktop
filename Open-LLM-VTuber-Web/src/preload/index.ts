@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/ban-ts-comment */
 import electron from 'electron';
-const { contextBridge, ipcRenderer, desktopCapturer } = electron;
+const { contextBridge, ipcRenderer, desktopCapturer, webUtils } = electron;
 import { electronAPI } from '@electron-toolkit/preload';
 import { ConfigFile } from '../main/menu-manager';
 
@@ -13,6 +13,8 @@ declare global {
 }
 
 const api = {
+  getPathForFile: (file: File) => webUtils.getPathForFile(file),
+  pickFiles: () => ipcRenderer.invoke('cyrene-pick-files'),
   getMicrophoneEnabled: () => ipcRenderer.sendSync('cyrene-microphone-enabled'),
   getControlToken: () => ipcRenderer.sendSync('cyrene-control-token'),
   setPetVisible: (visible: boolean) => ipcRenderer.invoke('cyrene-visibility', visible),

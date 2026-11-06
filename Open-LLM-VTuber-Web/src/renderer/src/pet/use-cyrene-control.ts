@@ -45,13 +45,14 @@ export function useCyreneControl(addAudioTask: (options: any) => Promise<void>, 
       if (model?._modelSetting && model._textureCount >= model._modelSetting.getTextureCount() && model !== readyModel) {
         readyModel = model;
         emitControlEvent('client.ready');
+        emitControlEvent(usePetActivity.getState().sleeping ? 'pet.sleeping' : 'pet.awake');
         emitControlEvent('layout.changed', { version: 1, matrix: Array.from(model._modelMatrix.getArray()) });
       }
     }, 250);
     const layout = (event: Event) => emitControlEvent('layout.changed', (event as CustomEvent).detail);
     window.addEventListener('cyrene-layout-saved', layout);
     const unsubscribe = usePetActivity.subscribe((state, previous) => {
-      if (state.sleeping !== previous.sleeping) emitControlEvent(state.sleeping ? 'pet.sleeping' : 'pet.awake');
+      if (state.sleeping !== previous.sleeping) emitControlEvent(state.sleeping ? 'pet.sleeping' : 'pet.awake', { expression: externalState.resolveExpression(state.sleeping, Date.now()) });
     });
     return () => {
       clearInterval(interval); clearTimeout(timer.current); unsubscribe();
@@ -63,7 +64,7 @@ export function useCyreneControl(addAudioTask: (options: any) => Promise<void>, 
     reset: () => { stopAudio(); cancelExternalSpeech(); externalState.reset(); usePetActivity.getState().setActivity('external', false); useExternalControl.getState().refresh(); },
     snapshot: (state: any) => {
       externalState.reset();
-      for (const task of state.tasks || []) externalState.task(task);
+      for (const task of state.tasks || []) externalState.task(task, Date.now(), true);
       if (state.expression?.expires_at * 1000 > Date.now()) {
         externalState.setExpression(state.expression.name, state.expression.expires_at * 1000 - Date.now(), Date.now());
       }
@@ -85,19 +86,13 @@ export function useCyreneControl(addAudioTask: (options: any) => Promise<void>, 
             const adapter = (window as any).getLAppAdapter?.();
             if (!adapter?.getModel()?._model || adapter.getExpressionCount() < 1) throw new Error('Model is not ready');
             externalState.setExpression(data.name, duration, now);
-            adapter.setExpression(data.name);
+            adapter.setExpression(externalState.resolveExpression(usePetActivity.getState().sleeping, now));
             break;
           }
           case 'task.start': case 'task.progress': case 'task.end':
-            externalState.task(data);
-            if (name === 'task.end') externalState.setExpression(data.status === 'failed' ? 'hurt' : data.status === 'cancelled' ? 'neutral' : 'happy', 3000, now);
+            externalState.task(data, now);
             useExternalControl.getState().refresh();
             break;
-          case 'pet.wake': externalState.awakeUntil = now + duration; break;
-          case 'pet.sleep':
-            externalState.expression = null; externalState.awakeUntil = 0;
-            if (externalState.running(now).length) throw new Error('Tasks are still running');
-            usePetActivity.getState().sleep(); break;
           case 'subtitle.set': caption(data.text, data.duration_ms ?? 8000, command_id); break;
           case 'speech.say':
             if (data.expression) externalState.setExpression(data.expression, duration, now);
@@ -112,7 +107,7 @@ export function useCyreneControl(addAudioTask: (options: any) => Promise<void>, 
               });
               await addAudioTask({ audioBase64: data.audio.audio, volumes: data.audio.volumes,
                 sliceLength: data.audio.slice_length, displayText: data.audio.display_text,
-                expressions: data.audio.actions?.expressions,
+                expressions: null, // Expressions are resolved by the app policy, including during audio playback.
                 onLifecycle: (event: string) => {
                   if (pendingSpeech.has(command_id)) emitControlEvent(`speech.${event}`, {}, command_id);
                 },

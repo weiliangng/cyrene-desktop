@@ -29,9 +29,9 @@ export default definePluginEntry({
     });
     api.registerTool({
       name: 'cyrene_control', label: 'Control Cyrene',
-      description: 'Control the desktop pet. Commands: expression.set {name,duration_ms?}; subtitle.set {text,duration_ms?}; speech.say {text,expression?,speak?}; task.start/progress/end {task_id,label?,progress? (0..1),status?}; pet.wake/sleep; ui.visibility {visible}; layout.set {matrix}; interrupt. Use subtitles for notifications. Ordinary chat is already displayed by the app, so do not speak it again with this tool. A receipt means accepted, not necessarily applied; read events for acknowledgements.',
+      description: 'Control the desktop UI. Wake/sleep is application-owned; expression.set never wakes the pet, sleep is reserved, and task transitions override expressions. Commands: expression.set {name,duration_ms?}; subtitle.set {text,duration_ms?}; speech.say {text,expression?,speak?}; task.start/progress/end {task_id,label?,progress? (0..1),status?}; pet.wake/sleep; ui.visibility {visible}; layout.set {matrix}; interrupt. Use subtitles for notifications. Ordinary chat is already displayed by the app, so do not speak it again with this tool. A receipt means accepted, not necessarily applied; read events for acknowledgements.',
       parameters: { type: 'object', properties: {
-        name: { type: 'string', enum: ['expression.set', 'subtitle.set', 'speech.say', 'task.start', 'task.progress', 'task.end', 'pet.wake', 'pet.sleep', 'ui.visibility', 'layout.set', 'interrupt'] },
+        name: { type: 'string', enum: ['expression.set', 'subtitle.set', 'speech.say', 'task.start', 'task.progress', 'task.end', 'ui.visibility', 'layout.set', 'interrupt'] },
         data: { type: 'object', additionalProperties: true },
         request_id: { type: 'string', description: 'Optional idempotency key; reuse only for retrying the same command.' },
       }, required: ['name', 'data'], additionalProperties: false },
@@ -64,7 +64,8 @@ export default definePluginEntry({
       const id = runs.get(event.runId ?? ctx.runId) ?? tasks.get(key);
       if (!id) return;
       tasks.delete(key); runs.delete(event.runId ?? ctx.runId);
-      await safe(() => command('task.end', { task_id: id, status: event.success === false ? 'failed' : 'completed', label: event.success === false ? 'Task failed' : 'Done' }, `${id}:end`));
+      const status = /abort|cancel|client disconnected/i.test(String(event.error ?? '')) ? 'cancelled' : event.success === false ? 'failed' : 'completed';
+      await safe(() => command('task.end', { task_id: id, status, label: status === 'cancelled' ? 'Cancelled' : status === 'failed' ? 'Task failed' : 'Done' }, `${id}:end`));
     });
   },
 });

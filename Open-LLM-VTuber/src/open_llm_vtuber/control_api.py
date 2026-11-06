@@ -17,9 +17,9 @@ from pydantic import BaseModel, Field
 from .agent.output_types import Actions, DisplayText
 from .utils.stream_audio import prepare_audio_payload
 
-EXPRESSIONS = ('neutral', 'happy', 'playful', 'blush', 'star_eyes', 'cry', 'hurt', 'angry', 'sweat', 'confused', 'sleep', 'wink')
+EXPRESSIONS = ('neutral', 'happy', 'playful', 'blush', 'star_eyes', 'cry', 'hurt', 'angry', 'sweat', 'confused', 'wink')
 COMMANDS = ('expression.set', 'speech.say', 'subtitle.set', 'task.start', 'task.progress', 'task.end',
-            'pet.wake', 'pet.sleep', 'ui.visibility', 'layout.set', 'input.submit', 'input.event', 'interrupt')
+            'ui.visibility', 'layout.set', 'input.submit', 'input.event', 'interrupt')
 
 
 class ControlCommand(BaseModel):
@@ -146,6 +146,7 @@ class ControlHub:
                  for task in self.tasks.values()]
         return {'version': 1, 'active_client_id': self.active_client(), 'clients': list(self.clients.values()),
                 'tasks': tasks, 'expression': self.expression, 'expressions': list(EXPRESSIONS),
+                'ui_only': bool(getattr(self.handler, 'ui_relay', None)), 'sleep_control': 'application',
                 'commands': list(COMMANDS), 'event_cursor': self.bus.sequence, 'event_epoch': self.bus.epoch}
 
     async def client_event(self, uid, message):
@@ -158,6 +159,8 @@ class ControlHub:
         data = message.get('data', {})
         if len(json.dumps(data)) > 32768:
             return
+        if name in ('pet.awake', 'pet.sleeping'):
+            self.clients[uid]['sleeping'] = name == 'pet.sleeping'
         if name == 'client.ready':
             self.clients[uid]['ready'] = True
         if name == 'layout.changed':
@@ -243,8 +246,6 @@ class ControlHub:
             running = self.handler.current_conversation_tasks.get(uid)
             if running and not running.done():
                 raise HTTPException(409, 'A conversation is already running; interrupt it before speaking externally')
-        if name == 'pet.sleep' and any(task['status'] == 'running' and task['expires_at'] > time.time() for task in self.tasks.values()):
-            raise HTTPException(409, 'Finish active tasks before putting the pet to sleep')
         if name == 'speech.say' and data.get('speak', True):
             if not uid:
                 raise HTTPException(409, 'No desktop client connected')
@@ -288,7 +289,7 @@ class ControlHub:
             if name == 'input.event':
                 await self.bus.emit('input.event', data, command_id=request_id, client_id=uid)
                 if data.get('invoke_agent'):
-                    text = data.get('prompt') or f"External event {data['event']}: {json.dumps(data.get('payload', {}))}. Respond briefly if useful."
+                    text = data.get('prompt') if data.get('prompt') is not None else json.dumps({'event': data['event'], 'payload': data.get('payload', {})}, ensure_ascii=False)
             if name == 'input.submit' or data.get('invoke_agent'):
                 await self.handler._route_message(self.handler.client_connections[uid], uid, {'type': 'text-input', 'text': text, 'cyrene_command_id': request_id})
                 receipt['delivered'] = True

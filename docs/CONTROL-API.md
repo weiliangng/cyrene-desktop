@@ -1,6 +1,6 @@
 # Cyrene external connections
 
-The desktop is the presentation layer. OpenClaw owns reasoning, tools and memory; SoCLaaS supplies its model. Commands target the registered desktop WebSocket session, so an automation does not create an invisible second avatar/session.
+The desktop is a presentation-only UI (`system_config.ui_only: true`). OpenClaw owns reasoning, tools and memory; SoCLaaS supplies its model. Commands target the registered desktop WebSocket session, so an automation does not create an invisible second avatar/session.
 
 ## Start and configure
 
@@ -25,11 +25,17 @@ The runtime is pinned to OpenClaw 2026.11.1. Node 24.16+ within Node 24, or Node
 
 Additional plugins can be installed/enabled in this profile with the normal OpenClaw CLI. The runtime supports its normal plugins; they are not all installed or connected automatically. This profile exposes the normal full tool profile and has no external messaging channels configured.
 
-Open-LLM-VTuber still handles streaming, sentence splitting, text and voice presentation. Its own MCP tool loop is disabled for this profile to let OpenClaw run tools. `request_user: cyrene-desktop` gives OpenClaw one stable personal session. Switching VTuber local histories does **not** create a separate OpenClaw memory session; change that identifier or use a separate agent/profile when separate memory is wanted.
+Open-LLM-VTuber relays the current user message to OpenClaw and streams response text verbatim. It does not initialize a conversation agent, ASR/VAD, translation, MCP tool loop or persona prompt. It does not trim the submitted text, capture media on send, split sentences, interpret expression tags, inject system messages, or replay local history into a model request. OpenClaw owns context, instructions, tool execution, session compaction and memory.
+
+Each UI conversation maps to an explicit `x-openclaw-session-key: agent:cyrene:desktop:<history_uid>`. Reopening a UI conversation reuses its OpenClaw session; creating a new conversation selects a new session. The app resumes the last selected conversation on reconnect/relaunch. Its saved transcript is a display cache only; deleting a local transcript does not erase OpenClaw's own session records. Old pre-relay transcripts remain viewable but are not imported into new agent sessions.
+
+User input is forwarded as `{"model":"openclaw/cyrene","stream":true,"messages":[{"role":"user","content":"<exact draft>"}]}`. The gateway emits SSE; the UI receives `chat.started`, `chat.delta` and `chat.finished` with the same turn ID. Responses and partial responses are retained unchanged. Stop closes the upstream HTTP stream, triggering OpenClaw's client-disconnect abort signal. A second input or thread change is rejected while the current turn runs; there are no silent input queues or automatic retries.
+
+Drag files onto the pet/window or use the paperclip in either input panel. Electron supplies absolute paths, which are visibly JSON-quoted and appended to the editable draft. Files are not uploaded, read, or automatically sent by dropping them. Shift+Enter adds a newline; Enter sends. OpenClaw can inspect those files using its normal local tools when the user sends the request.
 
 For a fresh full setup, `scripts/setup_windows.py --with-openclaw` installs and configures this integration too. A plain setup retains the existing preview behavior/config.
 
-Spoken replies are disabled by the user preference `character_config.tts_config.speech_enabled: false`. This skips speech synthesis for chat and converts `speech.say` to text even when a caller requests `speak:true`; its receipt reports `speech_enabled:false`. Text, expressions and independent sound cues remain available. Set this preference to `true` and restart the app to restore voice.
+Spoken replies are disabled by the user preference `character_config.tts_config.speech_enabled: false`. UI-only chat has no synthesis stage. This also disables synthesis for explicit speech commands and converts `speech.say` to text even when a caller requests `speak:true`; its receipt reports `speech_enabled:false`. Text, expressions and independent sound cues remain available. Set this preference to `true` and restart the app to restore voice.
 
 ## REST and events
 
@@ -62,27 +68,25 @@ Repeated identical `request_id` values return the prior receipt; changing the co
 | Command | `data` |
 | --- | --- |
 | `input.submit` | `{ "text": "..." }` sends chat through the **active desktop's** agent session |
-| `input.event` | `{ "event": "download.completed", "payload": {...}, "invoke_agent": false }` records a structured event; set `invoke_agent:true` to run the agent; optional `prompt` overrides its generated event prompt |
+| `input.event` | `{ "event": "download.completed", "payload": {...}, "invoke_agent": false }` records a structured event; set `invoke_agent:true` to run the agent; optional `prompt` is forwarded unchanged, otherwise event name/payload are serialized as JSON |
 | `expression.set` | `{ "name": "happy", "duration_ms": 5000 }` overrides the idle expression for a bounded time |
 | `speech.say` | `{ "text": "...", "expression": "happy", "speak": true }` uses configured TTS and Live2D lip sync; `speak:false` is silent text |
 | `subtitle.set` | `{ "text": "...", "duration_ms": 8000 }` shows a notification without running an LLM |
 | `task.start` | `{ "task_id": "download-123", "label": "Downloading", "progress": 0, "timeout_ms": 300000 }` |
 | `task.progress` | `{ "task_id": "download-123", "label": "Processing", "progress": 0.5 }` renews the lease |
 | `task.end` | `{ "task_id": "download-123", "status": "completed" }`; status can also be `failed` or `cancelled` |
-| `pet.wake` | `{ "duration_ms": 5000 }` |
-| `pet.sleep` | `{}`; rejected while a live task is running |
 | `ui.visibility` | `{ "visible": true }` shows/hides the desktop without stealing focus |
 | `layout.set` | `{ "matrix": [16 numbers] }`; use the current client layout as a starting point; changes persist normally |
 | `interrupt` | `{}` cancels active conversation/synthesis and clears/stops desktop audio |
 
-Expressions: `neutral`, `happy`, `playful`, `blush`, `star_eyes`, `cry`, `hurt`, `angry`, `sweat`, `confused`, `sleep`, `wink`. Expression/wake durations default to 5 seconds, captions to 8 seconds; maximum is 1 hour. Zero duration means no persistent override. Task progress is 0–1. Tasks have 5-minute leases by default (1 second to 1 hour allowed), keep the pet awake independently, and expire when abandoned. Ending one task does not end another. At most 100 tasks are retained.
+Expressions: `neutral`, `happy`, `playful`, `blush`, `star_eyes`, `cry`, `hurt`, `angry`, `sweat`, `confused`, `wink`. Expression durations default to 5 seconds, captions to 8 seconds; maximum is 1 hour. Zero duration means no persistent override. Task progress is 0–1. Tasks have 5-minute leases by default (1 second to 1 hour allowed), keep the pet awake independently, and expire when abandoned. Ending one task does not end another. At most 100 tasks are retained.
 
 Key output events:
 
 - `client.connected`, `client.ready`, `client.disconnected`
 - `command.accepted`, `command.dispatched`, `command.applied`, `command.failed`
 - `input.event`, `input.received`, `input.audio`, `input.focused`, `input.blurred`
-- `output.text` (text/display metadata), `output.completed`, `conversation.interrupted`
+- `output.delta` (verbatim streamed text), `output.completed` (full text and terminal status); legacy presentation also emits `output.text`
 - `speech.synthesizing`, `speech.ready`, `speech.started`, `speech.finished`, `speech.failed`, `speech.cancelled`
 - `task.started`, `task.progress`, `task.completed`, `task.failed`, `task.cancelled`, `task.expired`
 - `pet.awake`, `pet.sleeping`, `layout.changed`, `ui.visibility`
@@ -91,11 +95,17 @@ Events contain `id`, `type`, Unix `time`, `data`, and applicable `client_id`, `c
 
 External events are **not** fed back into OpenClaw automatically; `invoke_agent` is explicit to prevent event loops. A busy conversation returns 409 for another input; callers should queue or interrupt deliberately. No keylogging, browser click interception, or global screen monitoring is installed.
 
+## Application-owned sleep and expressions
+
+`pet.wake` and `pet.sleep` are no longer accepted commands, and `sleep` is reserved for the app. Hover, focus, an unsent draft, a running conversation/task, explicit notification display and playback hold the pet awake. After those holds end it returns to sleep after five seconds.
+
+An agent expression never wakes the pet. While awake it can display a temporary agent expression. Starting a task clears the previous expression. Completing the final task replaces it with a three-second application reaction (`happy`, `hurt` for failure, `neutral` for cancellation); this reaction overrides new agent expressions until it expires. Ending one task never releases another task's hold or shows a final completion reaction while another task is running. Expired task leases release their hold and clear stale expressions. Sleep always overrides agent expressions. `state.clients` reports observed `sleeping` state; agents report tasks and let the app decide presentation.
+
 ## CLI and automation
 
 ```powershell
 python scripts/cyrene_control.py state
-python scripts/cyrene_control.py send pet.wake
+python scripts/cyrene_control.py send expression.set --file expression.json
 python scripts/cyrene_control.py watch
 ```
 
@@ -122,7 +132,7 @@ It starts only when explicitly run and stops with Ctrl+C. Other event sources, s
 
 ## OpenClaw plugin and MCP
 
-OpenClaw tools: `cyrene_state`, `cyrene_control`, `cyrene_events`. Plugin hooks map `before_agent_run` → task start, `before_tool_call` → task progress, and `agent_end` → completed/failed. They are scoped to agent `cyrene`, use run IDs, and have a 4-second network timeout. A missing pet/API cannot block the assistant indefinitely. Ordinary chat is already voiced by VTuber; the plugin instructs the agent not to duplicate it with `speech.say`.
+OpenClaw tools: `cyrene_state`, `cyrene_control`, `cyrene_events`. Plugin hooks map `before_agent_run` → task start, `before_tool_call` → task progress, and `agent_end` → completed/failed. They are scoped to agent `cyrene`, use run IDs, and have a 4-second network timeout. A missing pet/API cannot block the assistant indefinitely. Ordinary chat is already displayed by the UI; the plugin instructs the agent not to duplicate it with `speech.say`.
 
 Other MCP clients can run the stdio adapter below; replace the two absolute paths for your checkout:
 
@@ -141,8 +151,10 @@ It exposes `cyrene_state`, `cyrene_command`, and `cyrene_events`. The backend/pe
 
 ## Verification
 
-`npm.cmd test`, `npm.cmd run test:startup`, `npm.cmd run test:control`, `npm.cmd run typecheck:comparison`, and `npm.cmd --prefix Open-LLM-VTuber-Web run typecheck:node`. Live checks verified an event-triggered OpenClaw/SoCLaaS reply, task start/end, actual speech playback, renderer acknowledgements, layout preservation, visibility, WebSocket events and MCP calls. Edge TTS was updated to 7.3.1 and audio conversion now uses the bundled FFmpeg without ffprobe.
+Run `npm.cmd test`, `npm.cmd run test:control`, `npm.cmd run test:startup`, `npm.cmd run typecheck:comparison`, and `npm.cmd --prefix Open-LLM-VTuber-Web run typecheck:node`. The backend suite covers verbatim forwarding, prompt/history exclusion, session routing, partial responses, cancellation, stream failures and cold-start engine bypass. Pet/plugin tests cover sleep priority, task reactions, concurrent task holds, lease expiry, HTTP-disconnect cancellation and visible file paths.
 
-The upstream renderer has existing diagnostics; the comparison checks for new ones. Build with `npm.cmd run build`, package with `npm.cmd run package`. Quit the packaged desktop before overwriting `release/quiet/win-unpacked`.
+Live packaged-app checks verified exact multiline/whitespace input, two-turn memory through OpenClaw, absolute paths from real Chromium files through Electron webUtils, drop-without-send behavior, task/expression priority, return to sleep, microphone blocking and actual gateway cancellation. Plain replies bypass speech entirely; explicit speech commands still honor the disabled-voice preference.
+
+The upstream renderer has existing diagnostics; the comparison checks for new ones. Build with `npm.cmd run build`, package with `npm.cmd run package`. Quit the packaged desktop before overwriting `release/interface/win-unpacked`.
 
 Official contracts used: [OpenClaw plugin SDK](https://docs.openclaw.ai/plugins/building-plugins), [hook reference](https://docs.openclaw.ai/plugins/hooks/reference), [OpenAI-compatible gateway](https://docs.openclaw.ai/gateway/openai-http-api).

@@ -5,6 +5,7 @@ const ts = require('typescript');
 const Module = require('node:module');
 const timers = new Map(); let nextTimer = 0;
 global.window = { setTimeout: (fn) => { timers.set(++nextTimer, fn); return nextTimer; }, clearTimeout: (id) => timers.delete(id) };
+global.localStorage = { getItem: () => 'saved-ui-thread' };
 const sockets = [];
 class FakeSocket {
   static CONNECTING = 0; static OPEN = 1;
@@ -24,6 +25,8 @@ copy._compile(ts.transpileModule(fs.readFileSync(file,'utf8'), { compilerOptions
 const { wsService } = copy.exports;
 wsService.connect('ws://pet'); const first=sockets[0]; first.open();
 assert.equal(wsService.getCurrentState(),'OPEN');
+assert.deepEqual(first.sent.find(m => m.type === 'resume-ui-session'), { type: 'resume-ui-session', history_uid: 'saved-ui-thread' });
+assert.equal(first.sent.some(m => m.type === 'create-new-history'), false, 'reconnect resumes the same agent session instead of creating a new one');
 const oldClose=first.onclose;
 first.close(); assert.equal(timers.size,1);
 const [id, retry]=[...timers][0]; timers.delete(id); retry();

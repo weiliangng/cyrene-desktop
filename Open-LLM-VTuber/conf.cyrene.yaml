@@ -1,5 +1,6 @@
 # System Settings: Setting related to the initialization of the server
 system_config:
+  ui_only: false # The OpenClaw launcher enables presentation-only mode on connection.
   conf_version: v1.2.1
   host: 127.0.0.1   # use 0.0.0.0 if you want other devices to access this page
   port: 12393

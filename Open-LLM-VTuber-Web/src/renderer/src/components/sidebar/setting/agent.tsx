@@ -1,50 +1,18 @@
-/* eslint-disable import/no-extraneous-dependencies */
-import { Stack } from '@chakra-ui/react';
-import { useTranslation } from 'react-i18next';
+import { Stack, Text } from '@chakra-ui/react';
 import { settingStyles } from './setting-styles';
-import { useAgentSettings } from '@/hooks/sidebar/setting/use-agent-settings';
-import { SwitchField, NumberField } from './common';
 
 interface AgentProps {
-  onSave?: (callback: () => void) => () => void
-  onCancel?: (callback: () => void) => () => void
+  onSave?: (callback: () => void) => () => void;
+  onCancel?: (callback: () => void) => () => void;
 }
-
-function Agent({ onSave, onCancel }: AgentProps): JSX.Element {
-  const { t } = useTranslation();
-  const {
-    settings,
-    handleAllowProactiveSpeakChange,
-    handleIdleSecondsChange,
-    handleAllowButtonTriggerChange,
-  } = useAgentSettings({ onSave, onCancel });
-
+function Agent(_props: AgentProps): JSX.Element {
   return (
     <Stack {...settingStyles.common.container}>
-      <SwitchField
-        label={t('settings.agent.allowProactiveSpeak')}
-        checked={settings.allowProactiveSpeak}
-        onChange={handleAllowProactiveSpeakChange}
-      />
-
-      {settings.allowProactiveSpeak && (
-        <NumberField
-          label={t('settings.agent.idleSecondsToSpeak')}
-          value={settings.idleSecondsToSpeak}
-          onChange={(value) => handleIdleSecondsChange(Number(value))}
-          min={0}
-          step={0.1}
-          allowMouseWheel
-        />
-      )}
-
-      <SwitchField
-        label={t('settings.agent.allowButtonTrigger')}
-        checked={settings.allowButtonTrigger}
-        onChange={handleAllowButtonTriggerChange}
-      />
+      <Text fontWeight="bold">OpenClaw</Text>
+      <Text>OpenClaw manages conversations, tools, memory and scheduled activity.</Text>
+      <Text>Cyrene displays replies and task progress. Hover or activity wakes her; she sleeps after inactivity.</Text>
+      <Text>Drop files or use the paperclip to add their paths to your draft. Shift+Enter adds a new line.</Text>
     </Stack>
   );
 }
-
 export default Agent;
