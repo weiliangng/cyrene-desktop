@@ -264,6 +264,7 @@ character_config:
 
   # =================== Text to Speech ===================
   tts_config:
+    speech_enabled: false  # Text replies; leave independent sound cues available
     tts_model: edge_tts
     # text to speech model options:
     #   'azure_tts', 'pyttsx3_tts', 'edge_tts', 'bark_tts',

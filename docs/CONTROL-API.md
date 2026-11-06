@@ -29,6 +29,8 @@ Open-LLM-VTuber still handles streaming, sentence splitting, text and voice pres
 
 For a fresh full setup, `scripts/setup_windows.py --with-openclaw` installs and configures this integration too. A plain setup retains the existing preview behavior/config.
 
+Spoken replies are disabled by the user preference `character_config.tts_config.speech_enabled: false`. This skips speech synthesis for chat and converts `speech.say` to text even when a caller requests `speak:true`; its receipt reports `speech_enabled:false`. Text, expressions and independent sound cues remain available. Set this preference to `true` and restart the app to restore voice.
+
 ## REST and events
 
 Base URL: `http://127.0.0.1:12393/api/cyrene`. All endpoints except `/health` require `Authorization: Bearer <token>`. The token is created by the backend in `tmp/cyrene-control/token`. Keep it in the caller's local configuration, not in a prompt or committed file. Both servers bind to loopback. Desktop registration also requires the control token; the packaged app obtains it through its local preload bridge, so an anonymous legacy chat connection cannot claim the active pet.
@@ -141,6 +143,6 @@ It exposes `cyrene_state`, `cyrene_command`, and `cyrene_events`. The backend/pe
 
 `npm.cmd test`, `npm.cmd run test:startup`, `npm.cmd run test:control`, `npm.cmd run typecheck:comparison`, and `npm.cmd --prefix Open-LLM-VTuber-Web run typecheck:node`. Live checks verified an event-triggered OpenClaw/SoCLaaS reply, task start/end, actual speech playback, renderer acknowledgements, layout preservation, visibility, WebSocket events and MCP calls. Edge TTS was updated to 7.3.1 and audio conversion now uses the bundled FFmpeg without ffprobe.
 
-The upstream renderer has existing diagnostics; the comparison checks for new ones. Build with `npm.cmd run build`, package with `npm.cmd run package`. Quit the packaged desktop before overwriting `release/control/win-unpacked`.
+The upstream renderer has existing diagnostics; the comparison checks for new ones. Build with `npm.cmd run build`, package with `npm.cmd run package`. Quit the packaged desktop before overwriting `release/text/win-unpacked`.
 
 Official contracts used: [OpenClaw plugin SDK](https://docs.openclaw.ai/plugins/building-plugins), [hook reference](https://docs.openclaw.ai/plugins/hooks/reference), [OpenAI-compatible gateway](https://docs.openclaw.ai/gateway/openai-http-api).

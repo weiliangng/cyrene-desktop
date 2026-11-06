@@ -434,6 +434,8 @@ class MinimaxTTSConfig(I18nMixin):
 class TTSConfig(I18nMixin):
     """Configuration for Text-to-Speech."""
 
+    speech_enabled: bool = Field(True, description="Generate spoken replies; independent sound cues are unaffected")
+
     tts_model: Literal[
         "azure_tts",
         "bark_tts",

@@ -147,6 +147,16 @@ export const useAudioTask = () => {
       }
     }
 
+    if (!audioBase64) {
+      if (displayText) updateSubtitle(displayText.text);
+      const adapter = (window as any).getLAppAdapter?.();
+      if (adapter && expressions?.[0] !== undefined) {
+        setExpression(expressions[0], adapter, `Set expression to: ${expressions[0]}`);
+      }
+      finish('finished');
+      return;
+    }
+
     try {
       // Process audio if available
       if (audioBase64) {

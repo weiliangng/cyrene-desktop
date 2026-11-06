@@ -335,10 +335,15 @@ class ServiceContext:
     def init_tts(self, tts_config: TTSConfig) -> None:
         if not self.tts_engine or (self.character_config.tts_config != tts_config):
             logger.info(f"Initializing TTS: {tts_config.tts_model}")
-            self.tts_engine = TTSFactory.get_tts_engine(
-                tts_config.tts_model,
-                **getattr(tts_config, tts_config.tts_model.lower()).model_dump(),
-            )
+            if not tts_config.speech_enabled:
+                from .tts.text_only import TTSEngine
+                self.tts_engine = TTSEngine()
+                logger.info("Spoken voice disabled; using text output")
+            else:
+                self.tts_engine = TTSFactory.get_tts_engine(
+                    tts_config.tts_model,
+                    **getattr(tts_config, tts_config.tts_model.lower()).model_dump(),
+                )
             # saving config should be done after successful initialization
             self.character_config.tts_config = tts_config
         else:

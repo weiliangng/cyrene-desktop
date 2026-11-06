@@ -229,6 +229,9 @@ class ControlHub:
         self.validate(command)
         uid = self.active_client(command.client_id)
         name, data = command.name, dict(command.data)
+        context = self.handler.client_contexts.get(uid)
+        if name == 'speech.say' and not getattr(getattr(context, 'tts_engine', None), 'speech_enabled', True):
+            data['speak'] = False
         if name in ('input.submit', 'interrupt') or (name == 'input.event' and data.get('invoke_agent')):
             if not uid:
                 raise HTTPException(409, 'No desktop client connected')
@@ -269,6 +272,7 @@ class ControlHub:
             self.expression = {'name': data['name'], 'expires_at': time.time() + data.get('duration_ms', 5000) / 1000}
         await self.bus.emit('command.accepted', {'name': name, 'source': command.source}, command_id=request_id, client_id=uid)
         receipt = {'command_id': request_id, 'name': name, 'status': 'accepted', 'client_id': uid, 'delivered': False}
+        if name == 'speech.say': receipt['speech_enabled'] = data.get('speak', True)
         envelope = {'type': 'cyrene-command', 'command_id': request_id, 'name': name, 'data': data}
         if name == 'speech.say' and data.get('speak', True):
             if not uid:

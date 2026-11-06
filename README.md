@@ -8,6 +8,8 @@ Double-click **Start Cyrene Desktop.cmd**. Cyrene starts in transparent pet mode
 
 After a reboot, OpenClaw may need to recover interrupted sessions. The launcher waits up to four minutes, reports progress, and reuses a gateway that is already starting. Overlapping launches wait on an OS lock instead of starting duplicate gateway/backend processes.
 
+Spoken replies are disabled (`character_config.tts_config.speech_enabled: false` in the local config). Replies and notifications remain text, expressions remain active, and independent sound cues are available.
+
 Right-click Cyrene or the tray icon to change modes, toggle input visibility or mouse passthrough, and exit. The original watermark-hiding preset and the heart-layer corrections remain applied. The original model ZIP is unchanged.
 
 OpenClaw is available as a pinned, project-local runtime with a Cyrene plugin. **Start Cyrene with OpenClaw.cmd** configures chat through OpenClaw and SoCLaaS (`SOCLAAS_API_KEY` in the launch environment). A token-protected local control API and MCP adapter expose event input/output, expressions, speech/subtitles, task lifecycles, wake/sleep, visibility, layout and interruption. See [external connections and examples](docs/CONTROL-API.md). The committed preview configuration remains a credential-free starting point.

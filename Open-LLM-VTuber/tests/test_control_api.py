@@ -113,6 +113,19 @@ class ControlTests(unittest.IsolatedAsyncioTestCase):
             with self.subTest(name=name, data=data):
                 with self.assertRaises(HTTPException): await self.send(name,data)
 
+    async def test_speech_disabled_cannot_be_overridden_by_external_caller(self):
+        async def forbidden_audio(*args): raise AssertionError('Speech synthesis must not run')
+        self.handler.client_contexts['pet'] = SimpleNamespace(tts_engine=SimpleNamespace(speech_enabled=False,async_generate_audio=forbidden_audio))
+        receipt = await self.send('speech.say',{'text':'Text notification','speak':True,'expression':'happy'})
+        self.assertFalse(receipt['speech_enabled'])
+        self.assertTrue(receipt['delivered'])
+        self.assertFalse(self.hub.jobs)
+        message=self.handler.client_connections['pet'].messages[-1]
+        self.assertEqual(message['name'],'speech.say')
+        self.assertFalse(message['data']['speak'])
+        self.assertEqual(message['data']['text'],'Text notification')
+        self.assertEqual(message['data']['expression'],'happy')
+
     async def test_tts_failure_is_reported_without_false_success(self):
         async def no_audio(*args): return None
         self.handler.client_contexts['pet'] = SimpleNamespace(tts_engine=SimpleNamespace(async_generate_audio=no_audio))
