@@ -5,7 +5,7 @@
   "scripts": {
     "build": "npm --prefix Open-LLM-VTuber-Web run build",
     "package": "npm --prefix Open-LLM-VTuber-Web run package:local",
-    "test": "npm --prefix Open-LLM-VTuber-Web run test:cyrene && node scripts/verify_cyrene_core.cjs && node Open-LLM-VTuber-Web/scripts/test-external.cjs && node Open-LLM-VTuber-Web/scripts/test-reconnect.cjs",
+    "test": "npm --prefix Open-LLM-VTuber-Web run test:cyrene && node scripts/verify_cyrene_core.cjs && node Open-LLM-VTuber-Web/scripts/test-external.cjs && node Open-LLM-VTuber-Web/scripts/test-reconnect.cjs && node Open-LLM-VTuber-Web/scripts/test-media-permissions.cjs",
     "typecheck:comparison": "npm --prefix Open-LLM-VTuber-Web run typecheck:comparison",
     "test:control": "cd Open-LLM-VTuber && .venv\\Scripts\\python.exe -m unittest discover -s tests -p test_control_api.py -v",
     "openclaw": "Open-LLM-VTuber\\.venv\\Scripts\\python.exe scripts/setup_openclaw.py cli",

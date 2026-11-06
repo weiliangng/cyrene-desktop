@@ -1,0 +1,13 @@
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const ts = require('typescript');
+const Module = require('node:module');
+const file = path.resolve(__dirname, '../src/main/media-permissions.ts');
+const copy = new Module(file);
+copy._compile(ts.transpileModule(fs.readFileSync(file,'utf8'), { compilerOptions: { module:ts.ModuleKind.CommonJS, target:ts.ScriptTarget.ES2022 } }).outputText,file);
+const { allowsMediaCapture } = copy.exports;
+for (const types of [undefined, [], ['audio'], ['audio','video'], ['unknown']]) assert.equal(allowsMediaCapture(false,types),false);
+assert.equal(allowsMediaCapture(false,['video']),true);
+assert.equal(allowsMediaCapture(true,['audio']),true);
+console.log('Microphone denied for audio, combined and unspecified requests; camera-only capture remains available.');

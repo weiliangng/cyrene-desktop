@@ -1,11 +1,12 @@
 /* eslint-disable no-shadow */
-import { app, ipcMain, globalShortcut, desktopCapturer, protocol, net } from "electron";
+import { app, ipcMain, globalShortcut, desktopCapturer, protocol, net, session } from "electron";
 import { join, resolve, relative, isAbsolute } from 'path';
 import { pathToFileURL } from 'url';
 import { appendFileSync, mkdirSync, readFileSync, writeFileSync } from 'fs';
 import { electronApp, optimizer } from "@electron-toolkit/utils";
 import { WindowManager } from "./window-manager";
 import { MenuManager } from "./menu-manager";
+import { allowsMediaCapture } from "./media-permissions";
 
 let windowManager: WindowManager;
 let menuManager: MenuManager;
@@ -16,6 +17,20 @@ const localRoot = app.isPackaged ? resolve(process.execPath, '..', '..', '..', '
 const stateDir = join(localRoot, 'tmp', 'cyrene-desktop-state');
 mkdirSync(stateDir, { recursive: true });
 app.setPath('userData', stateDir);
+const mediaPreferencesFile = join(stateDir, 'media-preferences.json');
+let microphoneEnabled = false;
+try { microphoneEnabled = JSON.parse(readFileSync(mediaPreferencesFile, 'utf8')).microphoneEnabled === true; }
+catch { writeFileSync(mediaPreferencesFile, JSON.stringify({ microphoneEnabled: false }), 'utf8'); }
+
+function configureMediaPermissions(target: Electron.Session): void {
+  target.setPermissionCheckHandler((_contents, permission, _origin, details) => (
+    permission === 'media' && allowsMediaCapture(microphoneEnabled, details.mediaType ? [details.mediaType] : undefined)
+  ));
+  target.setPermissionRequestHandler((_contents, permission, callback, details) => {
+    callback(permission === 'media' && allowsMediaCapture(microphoneEnabled, details.mediaTypes));
+  });
+}
+app.on('web-contents-created', (_event, contents) => configureMediaPermissions(contents.session));
 app.setAppLogsPath(join(stateDir, 'logs'));
 protocol.registerSchemesAsPrivileged([{
   scheme: 'cyrene', privileges: { standard: true, secure: true, supportFetchAPI: true, corsEnabled: true },
@@ -23,6 +38,9 @@ protocol.registerSchemesAsPrivileged([{
 
 let lastLayoutJson = '';
 function setupIPC(): void {
+  ipcMain.on('cyrene-microphone-enabled', (event) => {
+    event.returnValue = event.sender === windowManager.getWindow()?.webContents && microphoneEnabled;
+  });
   ipcMain.handle('cyrene-visibility', (event, visible) => {
     const window = windowManager.getWindow();
     if (!window || event.sender !== window.webContents || typeof visible !== 'boolean') throw new Error('Invalid visibility request');
@@ -119,6 +137,7 @@ function setupIPC(): void {
 }
 
 app.whenReady().then(() => {
+  configureMediaPermissions(session.defaultSession);
   electronApp.setAppUserModelId('local.cyrene.desktop');
   const modelRoot = app.isPackaged
     ? join(process.resourcesPath, 'live2d-models')
@@ -189,15 +208,7 @@ app.whenReady().then(() => {
     optimizer.watchWindowShortcuts(window);
   });
 
-  app.on('web-contents-created', (_, contents) => {
-    contents.session.setPermissionRequestHandler((webContents, permission, callback) => {
-      if (permission === 'media') {
-        callback(true);
-      } else {
-        callback(false);
-      }
-    });
-  });
+
 });
 
 app.on("window-all-closed", () => {

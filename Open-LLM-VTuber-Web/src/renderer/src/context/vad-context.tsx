@@ -1,6 +1,6 @@
 /* eslint-disable no-use-before-define */
 import {
-  createContext, useContext, useRef, useCallback, useEffect, useReducer, useMemo,
+  createContext, useContext, useRef, useCallback, useEffect, useReducer, useMemo, useState,
 } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MicVAD } from '@ricky0123/vad-web';
@@ -105,6 +105,7 @@ export const VADContext = createContext<VADState | null>(null);
  */
 export function VADProvider({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation();
+  const [microphoneAllowed] = useState(() => (window.api as any)?.getMicrophoneEnabled?.() ?? true);
   // Refs for VAD instance and state
   const vadRef = useRef<MicVAD | null>(null);
   const previousTriggeredProbabilityRef = useRef(0);
@@ -294,6 +295,7 @@ export function VADProvider({ children }: { children: React.ReactNode }) {
    * Start microphone and VAD processing
    */
   const startMic = useCallback(async () => {
+    if (!microphoneAllowed) { setMicOn(false); return; }
     try {
       if (!vadRef.current) {
         console.log('Initializing VAD');
@@ -311,7 +313,7 @@ export function VADProvider({ children }: { children: React.ReactNode }) {
         duration: 2000,
       });
     }
-  }, [t]);
+  }, [t, microphoneAllowed]);
 
   /**
    * Stop microphone and VAD processing
@@ -341,22 +343,33 @@ export function VADProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const setAutoStartMicOn = useCallback((value: boolean) => {
+    value = microphoneAllowed && value;
     autoStartMicRef.current = value;
     setAutoStartMicOnState(value);
     forceUpdate();
   }, []);
 
   const setAutoStartMicOnConvEnd = useCallback((value: boolean) => {
+    value = microphoneAllowed && value;
     autoStartMicOnConvEndRef.current = value;
     setAutoStartMicOnConvEndState(value);
     forceUpdate();
   }, []);
 
+  useEffect(() => {
+    if (!microphoneAllowed) {
+      stopMic();
+      setAutoStartMicOn(false);
+      setAutoStartMicOnConvEnd(false);
+      console.info('[Cyrene] Microphone disabled: capture blocked; automatic microphone activation off');
+    }
+  }, [microphoneAllowed, stopMic, setAutoStartMicOn, setAutoStartMicOnConvEnd]);
+
   // Memoized context value
   const contextValue = useMemo(
     () => ({
       autoStopMic: autoStopMicRef.current,
-      micOn,
+      micOn: microphoneAllowed && micOn,
       setMicOn,
       setAutoStopMic,
       startMic,
@@ -365,9 +378,9 @@ export function VADProvider({ children }: { children: React.ReactNode }) {
       setPreviousTriggeredProbability,
       settings,
       updateSettings,
-      autoStartMicOn: autoStartMicRef.current,
+      autoStartMicOn: microphoneAllowed && autoStartMicRef.current,
       setAutoStartMicOn,
-      autoStartMicOnConvEnd: autoStartMicOnConvEndRef.current,
+      autoStartMicOnConvEnd: microphoneAllowed && autoStartMicOnConvEndRef.current,
       setAutoStartMicOnConvEnd,
     }),
     [

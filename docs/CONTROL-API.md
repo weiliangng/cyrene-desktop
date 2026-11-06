@@ -143,6 +143,6 @@ It exposes `cyrene_state`, `cyrene_command`, and `cyrene_events`. The backend/pe
 
 `npm.cmd test`, `npm.cmd run test:startup`, `npm.cmd run test:control`, `npm.cmd run typecheck:comparison`, and `npm.cmd --prefix Open-LLM-VTuber-Web run typecheck:node`. Live checks verified an event-triggered OpenClaw/SoCLaaS reply, task start/end, actual speech playback, renderer acknowledgements, layout preservation, visibility, WebSocket events and MCP calls. Edge TTS was updated to 7.3.1 and audio conversion now uses the bundled FFmpeg without ffprobe.
 
-The upstream renderer has existing diagnostics; the comparison checks for new ones. Build with `npm.cmd run build`, package with `npm.cmd run package`. Quit the packaged desktop before overwriting `release/text/win-unpacked`.
+The upstream renderer has existing diagnostics; the comparison checks for new ones. Build with `npm.cmd run build`, package with `npm.cmd run package`. Quit the packaged desktop before overwriting `release/quiet/win-unpacked`.
 
 Official contracts used: [OpenClaw plugin SDK](https://docs.openclaw.ai/plugins/building-plugins), [hook reference](https://docs.openclaw.ai/plugins/hooks/reference), [OpenAI-compatible gateway](https://docs.openclaw.ai/gateway/openai-http-api).

@@ -13,6 +13,7 @@ declare global {
 }
 
 const api = {
+  getMicrophoneEnabled: () => ipcRenderer.sendSync('cyrene-microphone-enabled'),
   getControlToken: () => ipcRenderer.sendSync('cyrene-control-token'),
   setPetVisible: (visible: boolean) => ipcRenderer.invoke('cyrene-visibility', visible),
   savePetLayout: (layout: unknown) => ipcRenderer.send('cyrene-save-layout', layout),

@@ -176,7 +176,8 @@ export function InputSubtitle() {
                 {['neutral', 'happy', 'playful', 'blush', 'star_eyes', 'cry', 'hurt', 'angry', 'sweat', 'confused', 'sleep'].map((name) => <option key={name} value={name}>{name.replace('_', ' ')}</option>)}
               </select>
               <IconButton
-                aria-label="Toggle microphone"
+                aria-label={(window.api as any)?.getMicrophoneEnabled?.() === false ? "Microphone disabled" : "Toggle microphone"}
+                disabled={(window.api as any)?.getMicrophoneEnabled?.() === false}
                 onClick={handleMicToggle}
                 {...inputSubtitleStyles.iconButton}
               >
