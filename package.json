@@ -8,6 +8,7 @@
     "test": "npm --prefix Open-LLM-VTuber-Web run test:cyrene && node scripts/verify_cyrene_core.cjs && node Open-LLM-VTuber-Web/scripts/test-external.cjs && node Open-LLM-VTuber-Web/scripts/test-reconnect.cjs",
     "typecheck:comparison": "npm --prefix Open-LLM-VTuber-Web run typecheck:comparison",
     "test:control": "cd Open-LLM-VTuber && .venv\\Scripts\\python.exe -m unittest discover -s tests -p test_control_api.py -v",
-    "openclaw": "Open-LLM-VTuber\\.venv\\Scripts\\python.exe scripts/setup_openclaw.py cli"
+    "openclaw": "Open-LLM-VTuber\\.venv\\Scripts\\python.exe scripts/setup_openclaw.py cli",
+    "test:startup": "Open-LLM-VTuber\\.venv\\Scripts\\python.exe -m unittest discover -s scripts -p test_startup.py -v"
   }
 }

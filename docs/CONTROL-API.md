@@ -12,6 +12,8 @@ npm.cmd ci --prefix integrations/openclaw --omit=optional --maxsockets=2 --no-au
 
 Set `SOCLAAS_API_KEY` in the launch environment, then run **Start Cyrene with OpenClaw.cmd**. This creates a project profile, backs up the previous local VTuber config to `tmp/openclaw/conf.before-openclaw.yaml`, connects desktop chat to the gateway, and launches the pet. Once connected, **Start Cyrene Desktop.cmd** also starts the gateway automatically.
 
+After reboot, the launcher waits for saved-session recovery and prints progress every 15 seconds. A gateway that is alive but not ready is reused. Cross-process startup locks prevent parallel launchers from spawning competing gateways or backends; these locks are automatically released by Windows after a crash/reboot. The readiness deadline is four minutes, and timing out leaves OpenClaw running so a second launch can continue waiting.
+
 The runtime is pinned to OpenClaw 2026.11.1. Node 24.16+ within Node 24, or Node 26.1+, is required by this version. The Windows native helper is explicitly pinned to avoid its slower .NET fallback.
 
 - Gateway: `http://127.0.0.1:18789`, token authenticated. Its OpenAI-compatible endpoint selects `model: openclaw/cyrene`.
@@ -137,7 +139,7 @@ It exposes `cyrene_state`, `cyrene_command`, and `cyrene_events`. The backend/pe
 
 ## Verification
 
-`npm.cmd test`, `npm.cmd run test:control`, `npm.cmd run typecheck:comparison`, and `npm.cmd --prefix Open-LLM-VTuber-Web run typecheck:node`. Live checks verified an event-triggered OpenClaw/SoCLaaS reply, task start/end, actual speech playback, renderer acknowledgements, layout preservation, visibility, WebSocket events and MCP calls. Edge TTS was updated to 7.3.1 and audio conversion now uses the bundled FFmpeg without ffprobe.
+`npm.cmd test`, `npm.cmd run test:startup`, `npm.cmd run test:control`, `npm.cmd run typecheck:comparison`, and `npm.cmd --prefix Open-LLM-VTuber-Web run typecheck:node`. Live checks verified an event-triggered OpenClaw/SoCLaaS reply, task start/end, actual speech playback, renderer acknowledgements, layout preservation, visibility, WebSocket events and MCP calls. Edge TTS was updated to 7.3.1 and audio conversion now uses the bundled FFmpeg without ffprobe.
 
 The upstream renderer has existing diagnostics; the comparison checks for new ones. Build with `npm.cmd run build`, package with `npm.cmd run package`. Quit the packaged desktop before overwriting `release/control/win-unpacked`.
 

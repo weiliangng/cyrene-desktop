@@ -6,6 +6,8 @@ Private Windows desktop companion combining a customized Open-LLM-VTuber desktop
 
 Double-click **Start Cyrene Desktop.cmd**. Cyrene starts in transparent pet mode, asleep. Hover her to wake her; she returns to sleep after five seconds away from the model and text box. Input focus, an unsent message, or an active conversation keeps her awake. Position and size are automatically remembered after dragging or resizing, and restored on startup. Preferences are mirrored to `tmp/cyrene-desktop-state/pet-layout.json`. The lavender text box fades/slides with wake and sleep. Its header can be dragged. Use the expression dropdown for facial presets, or type in the input for keyboard tapping.
 
+After a reboot, OpenClaw may need to recover interrupted sessions. The launcher waits up to four minutes, reports progress, and reuses a gateway that is already starting. Overlapping launches wait on an OS lock instead of starting duplicate gateway/backend processes.
+
 Right-click Cyrene or the tray icon to change modes, toggle input visibility or mouse passthrough, and exit. The original watermark-hiding preset and the heart-layer corrections remain applied. The original model ZIP is unchanged.
 
 OpenClaw is available as a pinned, project-local runtime with a Cyrene plugin. **Start Cyrene with OpenClaw.cmd** configures chat through OpenClaw and SoCLaaS (`SOCLAAS_API_KEY` in the launch environment). A token-protected local control API and MCP adapter expose event input/output, expressions, speech/subtitles, task lifecycles, wake/sleep, visibility, layout and interruption. See [external connections and examples](docs/CONTROL-API.md). The committed preview configuration remains a credential-free starting point.

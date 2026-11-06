@@ -7,6 +7,8 @@ import secrets
 import subprocess
 import time
 import urllib.request
+from startup_lock import startup_lock
+from gateway_startup import gateway_status, wait_for_gateway
 
 ROOT = Path(__file__).resolve().parents[1]
 INTEGRATION = ROOT / 'integrations/openclaw'
@@ -74,40 +76,38 @@ def configure(connect=False):
     return token
 
 def ready(token):
-    try:
-        with urllib.request.urlopen('http://127.0.0.1:18789/readyz', timeout=2) as response:
-            if response.status != 200: return False
-        req = urllib.request.Request('http://127.0.0.1:18789/v1/models', headers={'Authorization':'Bearer '+token})
-        with urllib.request.urlopen(req, timeout=2) as response:
-            return any(model['id'] == 'openclaw/cyrene' for model in json.load(response)['data'])
-    except Exception: return False
+    return gateway_status(token)[0] == 'ready'
 
-def start():
-    token = configure()
-    if ready(token): return
-    if not os.environ.get('SOCLAAS_API_KEY'):
-        raise SystemExit('SOCLAAS_API_KEY is missing from the launch environment. Set it and reopen the launcher.')
-    with (STATE / 'gateway.stdout.log').open('ab') as stdout, (STATE / 'gateway.stderr.log').open('ab') as stderr:
-        process = subprocess.Popen(['node',str(CLI),'gateway','run'], cwd=ROOT, env=environment(),
-            stdout=stdout, stderr=stderr, stdin=subprocess.DEVNULL,
-            creationflags=subprocess.CREATE_NO_WINDOW | subprocess.CREATE_NEW_PROCESS_GROUP)
-    (STATE / 'gateway.pid').write_text(str(process.pid), encoding='ascii')
-    for _ in range(90):
-        if ready(token):
-            print('OpenClaw ready at http://127.0.0.1:18789 (Cyrene agent).')
-            return
-        if process.poll() is not None: raise SystemExit('OpenClaw exited; see tmp/openclaw/gateway.stderr.log')
-        time.sleep(1)
-    raise SystemExit('OpenClaw startup timed out; see tmp/openclaw/gateway.stderr.log')
+def start(connect=False):
+    with startup_lock(STATE / 'launch.lock'):
+        token = configure(connect)
+        def spawn():
+            if not os.environ.get('SOCLAAS_API_KEY'):
+                raise SystemExit('SOCLAAS_API_KEY is missing from the launch environment. Set it and reopen the launcher.')
+            with (STATE / 'gateway.stdout.log').open('ab') as stdout, (STATE / 'gateway.stderr.log').open('ab') as stderr:
+                marker = ('\n--- Cyrene launcher: ' + time.strftime('%Y-%m-%d %H:%M:%S') + ' ---\n').encode()
+                stderr.write(marker); stderr.flush()
+                process = subprocess.Popen(['node',str(CLI),'gateway','run'], cwd=ROOT, env=environment(),
+                    stdout=stdout, stderr=stderr, stdin=subprocess.DEVNULL,
+                    creationflags=subprocess.CREATE_NO_WINDOW | subprocess.CREATE_NEW_PROCESS_GROUP)
+            (STATE / 'gateway.pid').write_text(str(process.pid), encoding='ascii')
+            return process
+        try:
+            wait_for_gateway(token, CLI, spawn)
+        except RuntimeError as error:
+            raise SystemExit(str(error)) from None
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('action', choices=['configure','start','cli'])
     parser.add_argument('--connect', action='store_true', help='Route desktop chat through OpenClaw; back up current local config')
     args, rest = parser.parse_known_args()
-    configure(args.connect)
-    if args.action == 'start': start()
-    elif args.action == 'cli':
+    if args.action == 'start':
+        start(args.connect)
+        return
+    with startup_lock(STATE / 'launch.lock'):
+        configure(args.connect)
+    if args.action == 'cli':
         raise SystemExit(subprocess.call(['node',str(CLI),*rest], cwd=ROOT, env=environment()))
     else: print('Project OpenClaw profile configured. Runtime settings stay in tmp/openclaw.')
 
